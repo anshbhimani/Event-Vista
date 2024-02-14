@@ -1,0 +1,3 @@
+React for frontend
+Flask for connecting backend and frontend
+
