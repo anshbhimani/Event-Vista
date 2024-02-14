@@ -8,7 +8,11 @@ my_database = client["EventVista"]
 # Access a specific collection within the database (Users in our case)
 users = my_database["Users"]
 
-data = {"name": "John", "age": 30, "city": "New York"}
+data = {
+    "name": "John", 
+    "email": "John@gmail.com", 
+    "password": "SuperSecretPassword"
+    }
 # inserted_document = users.insert_one(data)
 # print("Inserted document ID:", inserted_document.inserted_id)
 

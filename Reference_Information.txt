@@ -1,0 +1,5 @@
+MongoDB
+Database name -- EventVista
+
+Collections:
+Users
