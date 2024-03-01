@@ -4,10 +4,14 @@ import { UserData } from './UserData';
 import { LoginForm } from './LoginForm';
 import { Dashboard } from './Dashboard';
 import { DashboardNavbar } from './DashboardNavbar';
+import { ForgotPassword } from './ForgotPassword';
 
 function App() {
   return (
     <div className="app">
+      <Route path="/">
+        Hello
+      </Route>
       <Route path="/login">
         <LoginForm />
       </Route>
@@ -20,6 +24,9 @@ function App() {
       <Route path='/dashboard'>
         <DashboardNavbar />
         <Dashboard />
+      </Route>
+      <Route path='/forgot-password'>
+        <ForgotPassword/>
       </Route>
     </div>
   );

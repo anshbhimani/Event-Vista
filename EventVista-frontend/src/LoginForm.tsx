@@ -1,16 +1,6 @@
 import React, { useState } from "react";
-import {
-  MDBBtn,
-  MDBContainer,
-  MDBRow,
-  MDBCol,
-  MDBCardBody,
-  MDBCardImage,
-  MDBInput,
-  MDBIcon,
-} from "mdb-react-ui-kit";
 import { useLocation } from 'wouter'
-import './App.css'
+import './LoginForm.css' // Import external CSS file
 
 const LoginEndPoint = "http://127.0.0.1:5000/api/login";
 
@@ -28,7 +18,7 @@ export function LoginForm() {
       ...prevData,
       [name]: value,
     }));
-  };  
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -36,9 +26,6 @@ export function LoginForm() {
       setError("All fields are required");
     } else {
       setError("");
-      // Submit the form here
-      console.log("Form submitted:", formData);
-
       try {
         const response = await fetch(LoginEndPoint, {
           method: "POST",
@@ -52,7 +39,6 @@ export function LoginForm() {
           throw new Error("Failed to login");
         }
 
-        // Reset form data after successful submission
         setFormData({
           email: "",
           password: "",
@@ -69,57 +55,44 @@ export function LoginForm() {
   };
 
   return (
-    <div className="login-container">
-      <MDBContainer className="login-form-container">
-        <MDBCardBody>
-          <MDBRow>
-            <MDBCol
-              md="6"
-              className="order-2 order-md-1 d-flex justify-content-center align-items-center mb-4 mb-md-0"
-            >
-              <MDBCardImage
-                src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-registration/draw1.webp" height="500"
-              />
-            </MDBCol>
-            <MDBCol
-              md="6"
-              className="order-1 order-md-2 d-flex flex-column justify-content-center align-items-center"
-            >
-              <h1>
-                Login
-              </h1>
-              {error && <div className="alert alert-danger">{error}</div>}
-              <form onSubmit={handleSubmit}>
-                <div className="d-flex flex-row align-items-center mb-4">
-                <MDBInput
-                    label="Your Email"
-                    id="form2"
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                  />
-                  <MDBIcon fas icon="envelope me-3" size="lg" />
+    <div className="container h-100">
+        <div className="d-flex justify-content-center h-100">
+            <div className="user_card">
+                <div className="d-flex justify-content-center">
+                    <div className="brand_logo_container">
+                        <img src="https://cdn.freebiesupply.com/logos/large/2x/pinterest-circle-logo-png-transparent.png" className="brand_logo" alt="Logo" />
+                    </div>
                 </div>
-                <div className="d-flex flex-row align-items-center mb-4">
-                  <MDBIcon fas icon="lock me-3" size="lg" />
-                  <MDBInput
-                    label="Password"
-                    id="form3"
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                  />
+                <div className="d-flex justify-content-center form_container">
+                    <form onSubmit={handleSubmit}>
+                        <div className="d-flex justify-content-center mt-3 login_container">
+                            <div className="input-group-append">
+                                <span className="input-group-text"><i className="fas fa-user"></i></span>
+                            </div>
+                            <input type="text" name="email" className="form-control input_user" value={formData.email} onChange={handleChange} placeholder="username" />
+                        </div>
+                        <div className="d-flex justify-content-center mt-3 login_container">
+                            <div className="input-group-append">
+                                <span className="input-group-text"><i className="fas fa-key"></i></span>
+                            </div>
+                            <input type="password" name="password" className="form-control input_pass" value={formData.password} onChange={handleChange} placeholder="password" />
+                        </div>
+                        <div className="d-flex justify-content-center mt-3 login_container">
+                            <button type="submit" className="btn login_btn">Login</button>
+                        </div>
+                    </form>
                 </div>
-                <MDBBtn type="submit" className="mb-4" size="lg">
-                  Login
-                </MDBBtn>
-              </form>
-            </MDBCol>
-          </MDBRow>
-        </MDBCardBody>
-      </MDBContainer>
+                {error && <div className="mt-4 text-center text-danger">{error}</div>}
+                <div className="mt-4">
+                    <div className="d-flex justify-content-center links">
+                        Don't have an account? <a href="/register" className="ml-2">Sign Up</a>
+                    </div>
+                    <div className="d-flex justify-content-center links">
+                        <a href="/forgot-password">Forgot your password?</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
   );
 }

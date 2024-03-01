@@ -17,6 +17,11 @@ check_install_dependency("flask_cors")
 import pymongo
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+from email.mime.text import MIMEText
 
 app = Flask(__name__)
 CORS(app)
@@ -82,6 +87,48 @@ try:
         except Exception as e:
             return jsonify({"error": "Error processing login request"}), 500
 
+    @app.route('/api/forgot_password', methods=['POST'])
+    def forgot_password():
+        try:
+            data = request.json
+            email = data.get('email')
+            password = 'Password@123'
+            body = f'Password is {password}'
+            filter = {'email': email}  # Fix syntax error here
+            update = {'$set': {'password': password}}
+            result = users.update_one(filter, update)
+            if result.modified_count > 0:
+                send_email(body, email)  # Pass recipient's email address here
+                return jsonify({"message": "Password reset successful. Check your email."}), 200
+            else:
+                return jsonify({"error": "User not found"}), 404
+        except Exception as e:
+            return jsonify({"error": "Error resetting password"}), 500
+    
+    
+    def send_email(body,to_email):
+        from_email = 'python.project.smtp@gmail.com'
+        password = 'wimgovktbckwfnkx'
+        
+        msg = MIMEMultipart()
+        msg['From'] = from_email
+        msg['To'] = to_email
+        msg['Subject'] = 'Here is your temporary password'
+
+        msg.attach(MIMEText(body, 'plain'))
+
+        try:
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(from_email, password)
+            text = msg.as_string()
+            server.sendmail(from_email, to_email, text)
+            server.quit()
+        
+        except:
+            return None
+
+                
     if __name__ == '__main__':
         app.run(debug=True,port=5000)
 

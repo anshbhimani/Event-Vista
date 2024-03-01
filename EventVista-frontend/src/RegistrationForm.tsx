@@ -1,15 +1,6 @@
 import React, { useState } from "react";
-import {
-  MDBBtn,
-  MDBContainer,
-  MDBRow,
-  MDBCol,
-  MDBCardBody,
-  MDBCardImage,
-  MDBInput,
-  MDBIcon,
-} from "mdb-react-ui-kit";
-import './App.css'
+import { useLocation } from 'wouter'
+import './RegistrationForm.css' // Import external CSS file
 
 const SendEndPoint = "http://127.0.0.1:5000/api/send_data";
 
@@ -19,8 +10,12 @@ export function RegistrationForm() {
     email: "",
     password: "",
     repeatPassword: "",
+    role: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRepeatPassword, setShowRepeatPassword] = useState(false);
   const [error, setError] = useState("");
+  const [, navigate] = useLocation();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,28 +23,24 @@ export function RegistrationForm() {
       ...prevData,
       [name]: value,
     }));
-  };  
+  };
+
+  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      role: value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.password ||
-      !formData.repeatPassword
-    ) {
+    if (!formData.name || !formData.email || !formData.password || !formData.repeatPassword || !formData.role) {
       setError("All fields are required");
     } else if (formData.password !== formData.repeatPassword) {
       setError("Passwords do not match");
-    } else if (!isPasswordValid(formData.password)) {
-      setError(
-        "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character"
-      );
     } else {
       setError("");
-      // Submit the form here
-      console.log("Form submitted:", formData);
-
       try {
         const response = await fetch(SendEndPoint, {
           method: "POST",
@@ -60,107 +51,99 @@ export function RegistrationForm() {
         });
 
         if (!response.ok) {
-          throw new Error("Failed to send form data");
+          throw new Error("Failed to register");
         }
 
-        // Reset form data after successful submission
         setFormData({
           name: "",
           email: "",
           password: "",
           repeatPassword: "",
+          role: "",
         });
 
-        console.log("Form submitted Successfully");
+        navigate('/login') // Redirect to dashboard after successful registration
+
+        console.log("Registration Successful");
       } catch (error) {
-        console.error("Error submitting form:", error);
-        setError("Failed to submit form data");
+        console.error("Error registering:", error);
+        setError("Failed to register");
       }
     }
   };
 
-  const isPasswordValid = (password: string) => {
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(password);
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleRepeatPasswordVisibility = () => {
+    setShowRepeatPassword(!showRepeatPassword);
   };
 
   return (
-    <>
-      <MDBContainer className="registration-form-container">
-        <MDBCardBody>
-          <MDBRow>
-            <MDBCol
-              md="6"
-              className="order-2 order-md-1 d-flex justify-content-center align-items-center mb-4 mb-md-0"
-            >
-              <MDBCardImage
-                src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-registration/draw1.webp"
-                fluid
-              />
-            </MDBCol>
-            <MDBCol
-              md="6"
-              className="order-1 order-md-2 d-flex flex-column justify-content-center align-items-center"
-            >
-              <p className="text-center h1 fw-bold mb-5 mx-1 mx-md-4 mt-4">
-                Sign up
-              </p>
-              {error && <div className="alert alert-danger">{error}</div>}
-              <form onSubmit={handleSubmit}>
-                <div className="d-flex flex-row align-items-center mb-4">
-                  <MDBIcon fas icon="user me-3" size="lg" />
-                  <MDBInput
-                    label="Your Name"
-                    id="form1"
-                    type="text"
-                    className="w-100"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                  />
+    <div className="container h-100">
+        <div className="d-flex justify-content-center h-100">
+            <div className="user_card">
+                <div className="d-flex justify-content-center">
+                    <div className="brand_logo_container">
+                        <img src="https://cdn.freebiesupply.com/logos/large/2x/pinterest-circle-logo-png-transparent.png" className="brand_logo" alt="Logo" />
+                    </div>
                 </div>
-                <div className="d-flex flex-row align-items-center mb-4">
-                  <MDBIcon fas icon="envelope me-3" size="lg" />
-                  <MDBInput
-                    label="Your Email"
-                    id="form2"
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                  />
+                <div className="d-flex justify-content-center form_container">
+                    <form onSubmit={handleSubmit}>
+                        <div className="input-group mb-3">
+                            <div className="input-group-append">
+                                <span className="input-group-text"><i className="fas fa-user"></i></span>
+                            </div>
+                            <input type="text" name="name" className="form-control input_user" value={formData.name} onChange={handleChange} placeholder="Name" />
+                        </div>
+                        <div className="input-group mb-3">
+                            <div className="input-group-append">
+                                <span className="input-group-text"><i className="fas fa-envelope"></i></span>
+                            </div>
+                            <input type="email" name="email" className="form-control input_email" value={formData.email} onChange={handleChange} placeholder="Email" />
+                        </div>
+                        <div className="input-group mb-3">
+                            <div className="input-group-append">
+                                <span className="input-group-text"><i className="fas fa-key"></i></span>
+                            </div>
+                            <input type={showPassword ? "text" : "password"} name="password" className="form-control input_pass" value={formData.password} onChange={handleChange} placeholder="Password" />
+                            <div className="input-group-append">
+                                <button className="btn btn-outline-secondary" type="button" onClick={togglePasswordVisibility}>{showPassword ? "Hide" : "Show"}</button>
+                            </div>
+                        </div>
+                        <div className="input-group mb-3">
+                            <div className="input-group-append">
+                                <span className="input-group-text"><i className="fas fa-key"></i></span>
+                            </div>
+                            <input type={showRepeatPassword ? "text" : "password"} name="repeatPassword" className="form-control input_pass" value={formData.repeatPassword} onChange={handleChange} placeholder="Repeat Password" />
+                            <div className="input-group-append">
+                                <button className="btn btn-outline-secondary" type="button" onClick={toggleRepeatPasswordVisibility}>{showRepeatPassword ? "Hide" : "Show"}</button>
+                            </div>
+                        </div>
+                        <div className="input-group mb-2">
+                            <div className="input-group-append">
+                                <span className="input-group-text"><i className="fas fa-users"></i></span>
+                            </div>
+                            <select name="role" className="form-control input_user" value={formData.role} onChange={handleRoleChange}>
+                                <option value="">Select Role</option>
+                                <option value="Organizer">Organizer</option>
+                                <option value="Attendant">Attendant</option>
+                            </select>
+                        </div>
+                        <div className="d-flex justify-content-center mt-3 login_container">
+                            <button type="submit" className="btn login_btn">Register</button>
+                        </div>
+                    </form>
                 </div>
-                <div className="d-flex flex-row align-items-center mb-4">
-                  <MDBIcon fas icon="lock me-3" size="lg" />
-                  <MDBInput
-                    label="Password"
-                    id="form3"
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                  />
+                {error && <div className="mt-4 text-center text-danger">{error}</div>}
+                <div className="mt-4">
+                    <div className="d-flex justify-content-center links">
+                        Already have an account? <a href="/login" className="ml-2">Login</a>
+                    </div>
                 </div>
-                <div className="d-flex flex-row align-items-center mb-4">
-                  <MDBIcon fas icon="key me-3" size="lg" />
-                  <MDBInput
-                    label="Repeat your password"
-                    id="form4"
-                    type="password"
-                    name="repeatPassword"
-                    value={formData.repeatPassword}
-                    onChange={handleChange}
-                  />
-                </div>
-                <MDBBtn type="submit" className="mb-4" size="lg">
-                  Register
-                </MDBBtn>
-              </form>
-            </MDBCol>
-          </MDBRow>
-        </MDBCardBody>
-      </MDBContainer>
-    </>
+            </div>
+        </div>
+    </div>
   );
 }
