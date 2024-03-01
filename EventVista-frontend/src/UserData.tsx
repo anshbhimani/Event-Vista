@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import {useState, useEffect} from "react";
 import ReactDOM from "react-dom";
 
 const Endpoint = "http://127.0.0.1:5000/api/get_data"
@@ -10,7 +10,7 @@ const ApiCall = async () => {
     return JSON.stringify(jsonResponse)
 }
 
-export function RenderResult() {
+export function UserData() {
     const [apiResponse, setApiResponse] = useState("*** now loading ***");
   
     useEffect(() => {
@@ -27,6 +27,6 @@ export function RenderResult() {
   };
   
   ReactDOM.render(
-      <RenderResult/>,
+      <UserData/>,
       document.querySelector('#root')
   );

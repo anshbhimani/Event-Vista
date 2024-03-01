@@ -5,6 +5,14 @@
   text-align: center;
 }
 
+.registration-form-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -39,4 +47,17 @@
 
 .read-the-docs {
   color: #888;
+}
+
+.normal-background {
+  background-color: #e5d186; /* Change to the desired color */
+}
+
+.dashboard-background {
+  background-color: #3fb9ad; /* Change to the desired color */
+}
+
+html, body{
+  height: 100%;
+  margin: 0;
 }
