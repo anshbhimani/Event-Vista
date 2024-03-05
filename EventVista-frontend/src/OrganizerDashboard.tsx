@@ -5,7 +5,7 @@ type Event = {
   name: string;
   location: string;
   city: string;
-  images: FileList | null;
+  images: File[] | null;
   description: string;
   poster: File | null;
   tags: string[];
@@ -16,7 +16,7 @@ export function OrganizerDashboard() {
   const [eventName, setEventName] = useState('');
   const [eventLocation, setEventLocation] = useState('');
   const [eventCity, setEventCity] = useState('');
-  const [eventImages, setEventImages] = useState<FileList | null>(null);
+  const [eventImages, setEventImages] = useState<File[] | null>(null);
   const [eventDescription, setEventDescription] = useState('');
   const [eventPoster, setEventPoster] = useState<File | null>(null);
   const [eventTags, setEventTags] = useState<string>('');
@@ -51,9 +51,11 @@ export function OrganizerDashboard() {
       formData.append('name', eventName);
       formData.append('location', eventLocation);
       formData.append('city', eventCity);
+
+      // Append image files to formData
       if (eventImages) {
         for (let i = 0; i < eventImages.length; i++) {
-          formData.append(`image${i}`, eventImages[i]);
+          formData.append(`images[]`, eventImages[i]);
         }
       }
       formData.append('description', eventDescription);
@@ -71,11 +73,12 @@ export function OrganizerDashboard() {
 
       if (response.ok) {
         // If the event was added successfully, update the events list
-        const eventData = await response.json();
-        setEvents([...events, eventData]);
+        const eventData = await response.json()
+        setEvents([...events, eventData])
+        await fetchEvents();
 
         // Reset form fields after adding event
-        setEventName('');
+        setEventName(''); 
         setEventLocation('');
         setEventCity('');
         setEventImages(null);
@@ -156,6 +159,12 @@ export function OrganizerDashboard() {
       console.error('Error deleting event:', error);
     }
   };
+
+  const handleMultiImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setEventImages(Array.from(e.target.files));
+    }
+  };
   
   return (
     <div className="organizer-dashboard">
@@ -185,7 +194,20 @@ export function OrganizerDashboard() {
             <p>City: {event.city}</p>
             <p>Description: {event.description}</p>
             <p>Tags: {event.tags}</p>
-            {/* Add more details as needed */}
+
+            {event.poster && (
+              <div>
+                <p>Poster:</p>
+                <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} alt="Event Poster" height="120"/>
+              </div>
+            )}
+            {event.images && (
+              <div>
+                <p>Images:</p>
+                <img src={`http://127.0.0.1:5000/api/get_event_images/${event.event_id}`} alt="Event Images" height="120"/>
+              </div>
+            )}
+            
             <div className="button-container">
               <button onClick={() => handleEditEvent(index)}>Edit</button>
               <button onClick={() => handleDeleteEvent(index)}>Delete</button>
