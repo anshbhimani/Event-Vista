@@ -11,3 +11,18 @@
     width: 100%; /* Adjust as needed */
     /* Your other styles */
   }
+
+  .user_card {
+    position: absolute;
+    width: 400px; /* Adjust width as needed */
+    height: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+    background: #f39c12;
+    padding: 20px 30px;
+    border-radius: 25px;
+    box-shadow: 0 0 30px 0 rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }

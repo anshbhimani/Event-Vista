@@ -1,0 +1,48 @@
+.event-list {
+    margin-top: 20px;
+  }
+  
+  .event {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .event h3 {
+    margin-bottom: 5px;
+  }
+  
+  .event button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .event button:hover {
+    background-color: #0056b3;
+  }
+  
+
+  .button-container {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .button-container button {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  
+  .button-container button:hover {
+    background-color: #c82333;
+  }
+  

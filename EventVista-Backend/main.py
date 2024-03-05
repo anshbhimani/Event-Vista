@@ -1,6 +1,24 @@
 import importlib
 from subprocess import call
+from bson import ObjectId  # Import ObjectId for generating unique identifiers
+import os
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+import pymongo
+from werkzeug.utils import secure_filename
+from gridfs import GridFS
+from pymongo import MongoClient
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import smtplib
 
+app = Flask(__name__)
+CORS(app)
+
+# Configure upload folder
+app.config['UPLOAD_FOLDER'] = 'uploads'
+
+# Check and install dependencies
 def check_install_dependency(module_name):
     try:
         importlib.import_module(module_name)
@@ -8,23 +26,9 @@ def check_install_dependency(module_name):
         print(f"{module_name} not found. Installing...")
         call(["pip", "install", module_name])
 
-# Check and install dependencies
 check_install_dependency("pymongo")
 check_install_dependency("flask")
 check_install_dependency("flask_cors")
-
-# Import the modules after checking/installing dependencies
-import pymongo
-from flask import Flask, jsonify, request
-from flask_cors import CORS
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
-from email.mime.text import MIMEText
-
-app = Flask(__name__)
-CORS(app)
 
 try:
     # Connect to MongoDB
@@ -35,6 +39,7 @@ try:
 
     # Access a specific collection within the database (Users in our case)
     users = my_database["Users"]
+    events = my_database["Events"]  # Add a collection for storing events
 
     @app.route('/api/get_data', methods=['GET'])
     def get_data():
@@ -80,7 +85,7 @@ try:
 
             # Compare the provided password with the stored password hash
             if user.get('password') == password:
-                return jsonify({"message": "Login successful"}), 200
+                return jsonify({"message": "Login successful", "role": user.get('role')}), 200
             else:
                 return jsonify({"error": "Incorrect password"}), 401
 
@@ -105,8 +110,77 @@ try:
         except Exception as e:
             return jsonify({"error": "Error resetting password"}), 500
     
-    
-    def send_email(body,to_email):
+    @app.route('/api/add_event', methods=['POST'])
+    def add_event():
+        try:
+            # Retrieve form data including images
+            data = request.form.to_dict()
+            event_id = str(ObjectId())
+
+            # Save images to GridFS
+            grid_fs = GridFS(my_database)
+            image_ids = []
+            for i, image_file in enumerate(request.files.getlist('image')):
+                image_id = grid_fs.put(image_file, filename=f'{event_id}_image_{i}.jpg')
+                image_ids.append(image_id)
+
+            # Save poster image
+            poster_file = request.files.get('poster')
+            if poster_file:
+                poster_id = grid_fs.put(poster_file, filename=f'{event_id}_poster.jpg')
+                data['poster'] = poster_id
+
+            # Save other event details to the database
+            data['event_id'] = event_id
+            data['images'] = image_ids
+            events.insert_one(data)
+
+            return jsonify({"message": "Event added successfully", "event_id": event_id}), 200
+        except Exception as e:
+            return jsonify({"error": "Error adding event"}), 500
+
+    @app.route('/api/update_event/<event_id>', methods=['PUT'])  # Route for updating events
+    def update_event(event_id):
+        try:
+            data = request.json
+            # Update the event details in the database
+            result = events.update_one({"event_id": event_id}, {"$set": data})
+            if result.modified_count > 0:
+                return jsonify({"message": "Event updated successfully"}), 200
+            else:
+                return jsonify({"error": "Event not found"}), 404
+        except Exception as e:
+            return jsonify({"error": "Error updating event"}), 500
+
+    @app.route('/api/delete_event/<event_id>', methods=['DELETE'])  # Route for deleting events
+    def delete_event(event_id):
+        try:
+            # Delete the event from the database
+            result = events.delete_one({"event_id": event_id})
+            if result.deleted_count > 0:
+                return jsonify({"message": "Event deleted successfully"}), 200
+            else:
+                return jsonify({"error": "Event not found"}), 404
+        except Exception as e:
+            return jsonify({"error": "Error deleting event"}), 500
+        
+    @app.route('/api/get_events', methods=['GET'])
+    def get_events():
+        try:
+            # Fetch all events from the MongoDB collection
+            event_data = events.find()
+            event_list = []
+            
+            for data in event_data:
+                data['_id'] = str(data['_id'])
+                event_list.append(data)
+            
+            return jsonify(event_list)
+        except Exception as e:
+            return jsonify({"error": "Error Fetching events from MongoDB server"}), 500
+
+
+    def send_email(body, to_email):
         from_email = 'python.project.smtp@gmail.com'
         password = 'wimgovktbckwfnkx'
         

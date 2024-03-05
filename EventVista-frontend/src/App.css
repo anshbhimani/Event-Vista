@@ -5,6 +5,13 @@
   text-align: center;
 }
 
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #011117 !important;
+}
+
 .registration-form-container {
   position: fixed;
   top: 50%;
@@ -54,7 +61,7 @@
 }
 
 .dashboard-background {
-  background-color: #3fb9ad; /* Change to the desired color */
+  background-color: #021412; /* Change to the desired color */
 }
 
 html, body{
