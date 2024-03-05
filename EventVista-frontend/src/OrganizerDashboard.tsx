@@ -97,6 +97,9 @@ export function OrganizerDashboard() {
         setEventPoster(null);
         setEventTags('');
         setEditIndex(null);
+
+
+        window.location.reload()
       } else {
         console.error('Failed to add/update event:', response.statusText);
       }
@@ -104,6 +107,7 @@ export function OrganizerDashboard() {
       console.error('Error adding/updating event:', error);
     }
   };
+
 
   // Function to handle delete event
   const handleDeleteEvent = async (index: number) => {
