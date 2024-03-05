@@ -22,30 +22,25 @@ export function OrganizerDashboard() {
   const [eventTags, setEventTags] = useState<string>('');
   const [attendeeCount, setAttendeeCount] = useState<number>(0);
   const [events, setEvents] = useState<Event[]>([]);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
 
-  const handleInterestClick = () => {
-    setAttendeeCount(attendeeCount => attendeeCount + 1);
+  // Function to handle edit event
+  const handleEditEvent = (index: number) => {
+    const eventToEdit = events[index];
+    setEditIndex(index);
+
+    // Populate input fields with event details
+    setEventName(eventToEdit.name);
+    setEventLocation(eventToEdit.location);
+    setEventCity(eventToEdit.city);
+    setEventImages(null); // You might want to handle images separately
+    setEventDescription(eventToEdit.description);
+    setEventPoster(null); // You might want to handle poster separately
+    setEventTags(eventToEdit.tags.join(', '));
   };
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
-    try {
-      const response = await fetch('http://127.0.0.1:5000/api/get_events');
-      if (response.ok) {
-        const eventData = await response.json();
-        setEvents(eventData);
-      } else {
-        console.error('Failed to fetch events:', response.statusText);
-      }
-    } catch (error) {
-      console.error('Error fetching events:', error);
-    }
-  };
-
-  const handleAddEvent = async () => {
+  // Function to handle add or edit event
+  const handleAddOrEditEvent = async () => {
     try {
       const formData = new FormData();
       formData.append('name', eventName);
@@ -66,64 +61,34 @@ export function OrganizerDashboard() {
         formData.append('poster', eventPoster);
       }
 
-      const response = await fetch('http://127.0.0.1:5000/api/add_event', {
-        method: 'POST',
+      let url = 'http://127.0.0.1:5000/api/add_event';
+      let method = 'POST';
+
+      // If editing, modify url and method
+      if (editIndex !== null) {
+        url = `http://127.0.0.1:5000/api/update_event/${events[editIndex].event_id}`;
+        method = 'PUT';
+      }
+
+      const response = await fetch(url, {
+        method: method,
         body: formData,
       });
 
       if (response.ok) {
-        // If the event was added successfully, update the events list
-        const eventData = await response.json()
-        setEvents([...events, eventData])
-        await fetchEvents();
-
-        // Reset form fields after adding event
-        setEventName(''); 
-        setEventLocation('');
-        setEventCity('');
-        setEventImages(null);
-        setEventDescription('');
-        setEventPoster(null);
-        setEventTags('');
-      } else {
-        console.error('Failed to add event:', response.statusText);
-      }
-    } catch (error) {
-      console.error('Error adding event:', error);
-    }
-  };
-
-  const handleEditEvent = async (index: number) => {
-    try {
-      const eventToUpdate = events[index];
-      const updatedEvent = {
-        ...eventToUpdate,
-        name: eventName,
-        location: eventLocation,
-        city: eventCity,
-        images: eventImages,
-        description: eventDescription,
-        poster: eventPoster,
-        tags: eventTags.split(',').map(tag => tag.trim())
-      };
-  
-      // Make a PUT request to update the event in the database
-      const response = await fetch(`http://127.0.0.1:5000/api/update_event/${eventToUpdate.event_id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedEvent),
-      });
-  
-      if (response.ok) {
-        // If the event was updated successfully, update the events list
         const eventData = await response.json();
-        const updatedEvents = [...events];
-        updatedEvents[index] = { ...updatedEvent, event_id: eventToUpdate.event_id };
-        setEvents(updatedEvents);
-  
-        // Reset form fields after editing event
+
+        if (editIndex !== null) {
+          // Update events list if editing
+          const updatedEvents = [...events];
+          updatedEvents[editIndex] = eventData;
+          setEvents(updatedEvents);
+        } else {
+          // Add new event to events list
+          setEvents([...events, eventData]);
+        }
+
+        // Clear input fields
         setEventName('');
         setEventLocation('');
         setEventCity('');
@@ -131,23 +96,25 @@ export function OrganizerDashboard() {
         setEventDescription('');
         setEventPoster(null);
         setEventTags('');
+        setEditIndex(null);
       } else {
-        console.error('Failed to update event:', response.statusText);
+        console.error('Failed to add/update event:', response.statusText);
       }
     } catch (error) {
-      console.error('Error updating event:', error);
+      console.error('Error adding/updating event:', error);
     }
   };
-  
+
+  // Function to handle delete event
   const handleDeleteEvent = async (index: number) => {
     try {
       const eventToDelete = events[index];
-  
+
       // Make a DELETE request to delete the event from the database
       const response = await fetch(`http://127.0.0.1:5000/api/delete_event/${eventToDelete.event_id}`, {
         method: 'DELETE',
       });
-  
+
       if (response.ok) {
         // If the event was deleted successfully, update the events list
         const updatedEvents = events.filter((event, i) => i !== index);
@@ -160,27 +127,43 @@ export function OrganizerDashboard() {
     }
   };
 
-  const handleMultiImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setEventImages(Array.from(e.target.files));
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/get_events');
+      if (response.ok) {
+        const eventData = await response.json();
+        setEvents(eventData);
+      } else {
+        console.error('Failed to fetch events:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
     }
   };
-  
+
   return (
     <div className="organizer-dashboard">
       <div className="event-details">
-        <h2>Add New Event</h2>
+        {editIndex !== null ? (
+          <h2>Edit Event</h2>
+        ) : (
+          <h2>Add New Event</h2>
+        )}
         <form>
           <input type="text" placeholder="Event Name" value={eventName} onChange={(e) => setEventName(e.target.value)} />
           <input type="text" placeholder="Location" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} />
           <input type="text" placeholder="City" value={eventCity} onChange={(e) => setEventCity(e.target.value)} />
           <label>Event Images :</label>
           <input type="file" placeholder="Event Images" onChange={(e) => setEventImages(e.target.files)} multiple />
-          <textarea placeholder="Description" value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} />
           <label>Event Poster :</label>
           <input type="file" placeholder="Event Poster" onChange={(e) => setEventPoster(e.target.files ? e.target.files[0] : null)} />
+          <textarea placeholder="Description" value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} />
           <input type="text" placeholder="Tags (comma-separated)" value={eventTags} onChange={(e) => setEventTags(e.target.value)} />
-          <button type="button" onClick={handleAddEvent}>Add Event</button>
+          <button type="button" onClick={handleAddOrEditEvent}>{editIndex !== null ? 'Save' : 'Add Event'}</button>
         </form>
       </div>
 
@@ -194,20 +177,20 @@ export function OrganizerDashboard() {
             <p>City: {event.city}</p>
             <p>Description: {event.description}</p>
             <p>Tags: {event.tags}</p>
-
             {event.poster && (
               <div>
                 <p>Poster:</p>
-                <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} alt="Event Poster" height="85%" width="15%"/>
+                <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} alt="Event Poster" height="150" />
               </div>
             )}
             {event.images && (
               <div>
                 <p>Images:</p>
-                <img src={`http://127.0.0.1:5000/api/get_event_images/${event.event_id}`} alt="Event Images" height="120"/>
+                {event.images.map((image, i) => (
+                  <img key={i} src={`http://127.0.0.1:5000/api/get_event_image/${event.event_id}?index=${i}`} alt={`Event Image ${i + 1}`} height="150" />
+                ))}
               </div>
             )}
-            
             <div className="button-container">
               <button onClick={() => handleEditEvent(index)}>Edit</button>
               <button onClick={() => handleDeleteEvent(index)}>Delete</button>

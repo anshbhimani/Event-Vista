@@ -146,7 +146,15 @@ try:
     @app.route('/api/update_event/<event_id>', methods=['PUT'])  # Route for updating events
     def update_event(event_id):
         try:
-            data = request.json
+            # Retrieve form data including images
+            data = request.form.to_dict()
+
+            # Save poster image as binary data
+            poster_file = request.files.get('poster')
+            if poster_file:
+                poster_data = Binary(poster_file.read())
+                data['poster'] = poster_data
+
             # Update the event details in the database
             result = events.update_one({"event_id": event_id}, {"$set": data})
             if result.modified_count > 0:
