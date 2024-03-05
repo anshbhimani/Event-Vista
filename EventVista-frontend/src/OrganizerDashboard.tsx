@@ -198,7 +198,7 @@ export function OrganizerDashboard() {
             {event.poster && (
               <div>
                 <p>Poster:</p>
-                <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} alt="Event Poster" height="120"/>
+                <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} alt="Event Poster" height="85%" width="15%"/>
               </div>
             )}
             {event.images && (
