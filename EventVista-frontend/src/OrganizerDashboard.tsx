@@ -167,7 +167,7 @@ export function OrganizerDashboard() {
           <input type="text" placeholder="Location" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} />
           <input type="text" placeholder="City" value={eventCity} onChange={(e) => setEventCity(e.target.value)} />
           <label>Event Images :</label>
-          <input type="file" placeholder="Event Images" onChange={(e) => setEventImages(e.target.files)} multiple />
+          <input type="file" placeholder="Event Images" onChange={(e) => setEventImages(e.target.files ? e.target.files[0] : null)} />
           <label>Event Poster :</label>
           <input type="file" placeholder="Event Poster" onChange={(e) => setEventPoster(e.target.files ? e.target.files[0] : null)} />
           <textarea placeholder="Description" value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} />
@@ -188,7 +188,7 @@ export function OrganizerDashboard() {
             <p><u>Tags</u>: {event.tags}</p>
             <p><u>Event Id</u>: {event.event_id}</p>
             <p><u>Poster</u>:</p>
-            <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} height="250"/>
+            <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} height="256"/>
             <p>Event Images: </p>
             {event.images && (
               <div>

@@ -4,7 +4,6 @@ from bson import ObjectId  # Import ObjectId for generating unique identifiers
 from bson.binary import Binary
 from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
-from werkzeug.utils import secure_filename
 from gridfs import GridFS
 from pymongo import MongoClient
 from email.mime.multipart import MIMEMultipart
@@ -116,13 +115,12 @@ try:
             # Retrieve form data including images
             data = request.form.to_dict()
             event_id = str(ObjectId())
-            
-            # Save images as binary data to GridFS
-            fs = GridFS(my_database)
+
+            i=0
             for i, image_file in enumerate(request.files.getlist('image')):
                 image_data = Binary(image_file.read())
-                image_id = fs.put(image_data, filename=f"Image_{event_id}_{i}.jpg")
-                data[f"Image_{event_id}_{i}.jpg"] = str(image_id)
+                data[f'Image_{event_id}_{i}'] = image_data
+                i = i + 1
 
             # Save poster image as binary data
             poster_file = request.files.get('poster')
@@ -151,6 +149,18 @@ try:
             if poster_file:
                 poster_data = Binary(poster_file.read())
                 data['poster'] = poster_data
+                
+            # Update event images if provided
+            if 'images' in request.files:
+                # Retrieve the list of new images
+                new_images = request.files.getlist('image')
+                
+                # Save new images to GridFS
+                fs = GridFS(my_database)
+                for i, image_file in enumerate(new_images):
+                    image_data = Binary(image_file.read())
+                    image_id = fs.put(image_data, filename=f"Image_{event_id}_{i}.jpg")
+                    data[f"Image_{event_id}_{i}.jpg"] = str(image_id)
 
             # Update the event details in the database
             result = events.update_one({"event_id": event_id}, {"$set": data})
