@@ -85,7 +85,7 @@ try:
 
             # Compare the provided password with the stored password hash
             if user.get('password') == password:
-                return jsonify({"message": "Login successful", "role": user.get('role')}), 200
+                return jsonify({"message": "Login successful", "role": user.get('role'), "Organizer_ID": user.get('organizer_id'), "Organizer_Name": user.get('name')}), 200
             else:
                 return jsonify({"error": "Incorrect password"}), 401
 
@@ -117,11 +117,6 @@ try:
             data = request.form.to_dict()
             event_id = str(ObjectId())
             
-            # # Convert the date and time string to a datetime object
-            # event_date_time = datetime.strptime(data['Date'], '%Y-%m-%dT%H:%M')
-            # data['Date'] = event_date_time
-
-
             # Save images as binary data to GridFS
             fs = GridFS(my_database)
             for i, image_file in enumerate(request.files.getlist('image')):
@@ -136,7 +131,9 @@ try:
                 data['poster'] = poster_data
 
             # Save other event details to the database
+            data['_id'] = event_id
             data['event_id'] = event_id
+            
             events.insert_one(data)
 
             return jsonify({"message": "Event added successfully", "event_id": event_id}), 200
