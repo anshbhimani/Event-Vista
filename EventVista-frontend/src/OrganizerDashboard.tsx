@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './OrganizerDashboard.css';
+import { navigate } from 'wouter/use-hash-location';
 
 type Event = {
   name: string;
@@ -129,6 +130,12 @@ export function OrganizerDashboard() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('organizerId');
+    localStorage.removeItem('organizerName');
+    window.location.href = '/login';
+  };
+
   const handleDeleteEvent = async (index: number) => {
     try {
       const eventToDelete = events[index];
@@ -154,7 +161,7 @@ export function OrganizerDashboard() {
       <br/>
       Organizer Id: {OrganizerId}
       <div className='logout-container'>
-        <button>Logout</button>
+        <button onClick={handleLogout}>Logout</button>
       </div>
       <div className="event-details">
         {editIndex !== null ? (
