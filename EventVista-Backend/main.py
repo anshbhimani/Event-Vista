@@ -224,9 +224,10 @@ try:
         
     @app.route('/api/get_events', methods=['GET'])
     def get_events():
-        try:
+        try: 
+            organizer_id = request.args.get('organizer_id')
             # Fetch all events from the MongoDB collection
-            event_data = events.find()
+            event_data = events.find({'organizer_id': organizer_id})
             event_list = []
             
             for data in event_data:

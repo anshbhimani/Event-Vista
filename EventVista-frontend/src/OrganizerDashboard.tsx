@@ -90,6 +90,9 @@ export function OrganizerDashboard() {
         formData.append('poster', eventPoster);
       }
 
+      formData.append('organizer_id', OrganizerId);
+      formData.append('organizer_name', OrganizerName);
+
       let url = `http://127.0.0.1:5000/api/add_event?organizer_id=${OrganizerId}`;
       let method = 'POST';
 
@@ -157,9 +160,11 @@ export function OrganizerDashboard() {
   
   return (
     <div className="organizer-dashboard">
-      Welcome {OrganizerName}!! 
-      <br/>
-      Organizer Id: {OrganizerId}
+      <h2 className='Welcome'>
+        Welcome {OrganizerName}!!
+        <br/>
+        Organizer Id: {OrganizerId}
+      </h2>
       <div className='logout-container'>
         <button onClick={handleLogout}>Logout</button>
       </div>
