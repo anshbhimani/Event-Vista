@@ -1,8 +1,6 @@
 // App.tsx
-
 import { Route, Switch } from 'wouter'; // Import Switch from wouter
 import { RegistrationForm } from './RegistrationForm';
-import { UserData } from './UserData';
 import { LoginForm } from './LoginForm';
 import { Dashboard } from './Dashboard';
 import { DashboardNavbar } from './DashboardNavbar';
@@ -17,7 +15,6 @@ function App() {
         <Route path="/" component={HomePage} />
         <Route path="/login" component={LoginForm} />
         <Route path="/register" component={RegistrationForm} />
-        <Route path="/user-data" component={UserData} />
         <Route path="/dashboard">
           <DashboardNavbar />
           <Dashboard />

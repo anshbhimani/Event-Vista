@@ -8,6 +8,24 @@
     padding: 10px;
     margin-bottom: 10px;
   }
+
+  .logout-container{
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .logout-container button {
+    background-color: blueviolet;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  
+  .logout-container button:hover {
+    background-color: #8a2be2;
+  }
   
   .event h3 {
     margin-bottom: 5px;
@@ -46,6 +64,3 @@
     background-color: #c82333;
   }
   
-  .logout button{
-    margin-left: auto;
-  }

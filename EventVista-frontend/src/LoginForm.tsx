@@ -11,7 +11,6 @@ export function LoginForm() {
   });
   const [error, setError] = useState("");
   const [, navigate] = useLocation();
-  const [, setUserRole] = useState(""); // New state to store user role
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -41,7 +40,19 @@ export function LoginForm() {
         }
 
         const userData = await response.json(); // Assuming server returns user data including role
-        setUserRole(userData.role); // Store user role
+        console.log('Response Data : ', userData);
+        
+        const organizer_id = userData['Organizer_ID']
+        const role = userData['role']
+        const organizer_name = userData['Organizer_Name']
+
+        // Store user role and organizer ID in local storage
+        localStorage.setItem('userRole', role);
+        localStorage.setItem('organizerId', organizer_id);
+        localStorage.setItem('organizerName', organizer_name)
+        console.log('Organizer ID stored in local storage:', organizer_id); 
+        console.log('Organizer Name : ', organizer_name);
+        
 
         setFormData({
           email: "",
@@ -53,7 +64,7 @@ export function LoginForm() {
           navigate('/organizer-dashboard');
         } else if (userData.role === "Attendant") {
           navigate('/attendee-dashboard');
-        } else if(userData.role === "Admin"){
+        } else if (userData.role === "Admin"){
           navigate('/admin-dashboard')
         }
         else {
