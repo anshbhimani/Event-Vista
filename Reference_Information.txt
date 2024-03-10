@@ -3,3 +3,4 @@ Database name -- EventVista
 
 Collections:
 Users
+Events
