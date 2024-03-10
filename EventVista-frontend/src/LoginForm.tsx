@@ -60,11 +60,11 @@ export function LoginForm() {
         });
 
          // Redirect user based on role
-         if (userData.role === "Organizer") {
+         if (role === "Organizer") {
           navigate('/organizer-dashboard');
-        } else if (userData.role === "Attendant") {
+        } else if (role === "Attendant") {
           navigate('/attendee-dashboard');
-        } else if (userData.role === "Admin"){
+        } else if (role === "Admin"){
           navigate('/admin-dashboard')
         }
         else {
@@ -132,7 +132,7 @@ export function LoginForm() {
             </form>
           </div>
           {error && (
-            <div className="mt-4 text-center text-danger">{error}</div>
+            <div className="text-danger">{error}</div>
           )}
           <div className="mt-4">
             <div className="d-flex justify-content-center links">

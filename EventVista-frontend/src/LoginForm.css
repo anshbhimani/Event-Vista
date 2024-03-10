@@ -12,6 +12,10 @@
     /* Your other styles */
   }
 
+  .text-danger{
+    color: red;
+  }
+
   .user_card {
     position: absolute;
     width: 400px; /* Adjust width as needed */
