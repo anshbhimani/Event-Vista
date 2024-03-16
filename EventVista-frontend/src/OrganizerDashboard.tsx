@@ -5,6 +5,7 @@ type Event = {
   name: string;
   location: string;
   city: string;
+  date: Date;
   images: File[] | null;
   description: string;
   poster: File | null;
@@ -16,6 +17,7 @@ export function OrganizerDashboard() {
   const [eventName, setEventName] = useState('');
   const [eventLocation, setEventLocation] = useState('');
   const [eventCity, setEventCity] = useState('');
+  const [eventDate, setEventDate] = useState<Date | null>(null);
   const [eventImages, setEventImages] = useState<File[] | null>(null);
   const [eventDescription, setEventDescription] = useState('');
   const [eventPoster, setEventPoster] = useState<File | null>(null);
@@ -23,7 +25,7 @@ export function OrganizerDashboard() {
   const [events, setEvents] = useState<Event[]>([]);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [OrganizerId] = useState<string>(() => localStorage.getItem('organizerId') ?? '');
-  const [OrganizerName] = useState<string>(() => localStorage.getItem('organizerName') ?? '')
+  const [OrganizerName] = useState<string>(() => localStorage.getItem('organizerName') ?? '');
 
   useEffect(() => {
     // Fetch organizer ID from local storage
@@ -43,6 +45,7 @@ export function OrganizerDashboard() {
           name: event.name || '', // Handle null values appropriately
           location: event.location || '', // Handle null values appropriately
           city: event.city || '', // Handle null values appropriately
+          date: new Date(event.date), // Convert to Date object
           description: event.description || '', // Handle null values appropriately
           tags: event.tags ? event.tags.split(',') : [], // Convert tags string to array
           event_id: event.event_id || '', // Handle null values appropriately
@@ -56,7 +59,6 @@ export function OrganizerDashboard() {
     }
   };
 
-
   const handleEditEvent = (index: number) => {
     const eventToEdit = events[index];
     setEditIndex(index);
@@ -64,10 +66,11 @@ export function OrganizerDashboard() {
     setEventName(eventToEdit.name);
     setEventLocation(eventToEdit.location);
     setEventCity(eventToEdit.city);
+    setEventDate(eventToEdit.date);
     setEventImages(null);
     setEventDescription(eventToEdit.description);
     setEventPoster(null);
-    setEventTags(eventToEdit.tags.join(', '));  
+    setEventTags(eventToEdit.tags.join(', '));
   };
 
   const handleAddOrEditEvent = async () => {
@@ -76,6 +79,7 @@ export function OrganizerDashboard() {
       formData.append('name', eventName);
       formData.append('location', eventLocation);
       formData.append('city', eventCity);
+      formData.append('date', eventDate?.toISOString() ?? '');
 
       if (eventImages) {
         for (let i = 0; i < eventImages.length; i++) {
@@ -107,6 +111,7 @@ export function OrganizerDashboard() {
 
       if (response.ok) {
         const eventData = await response.json();
+        window.location.reload()
 
         if (editIndex !== null) {
           const updatedEvents = [...events];
@@ -119,6 +124,7 @@ export function OrganizerDashboard() {
         setEventName('');
         setEventLocation('');
         setEventCity('');
+        setEventDate(null);
         setEventImages(null);
         setEventDescription('');
         setEventPoster(null);
@@ -156,15 +162,14 @@ export function OrganizerDashboard() {
     }
   };
 
-  
   return (
     <div className="organizer-dashboard" style={{ backgroundColor: '#17591865' }}>
-      <h2 className='Welcome'>
+      <h2 className="Welcome">
         Welcome {OrganizerName}!!
-        <br/>
+        <br />
         Organizer Id: {OrganizerId}
       </h2>
-      <div className='logout-container'>
+      <div className="logout-container">
         <button onClick={handleLogout}>Logout</button>
       </div>
       <div className="event-details">
@@ -177,6 +182,8 @@ export function OrganizerDashboard() {
           <input type="text" placeholder="Event Name" value={eventName} onChange={(e) => setEventName(e.target.value)} />
           <input type="text" placeholder="Location" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} />
           <input type="text" placeholder="City" value={eventCity} onChange={(e) => setEventCity(e.target.value)} />
+          <label>Event Date :</label>
+          <input type="datetime-local" placeholder="Date" onChange={(e) => setEventDate(new Date(e.target.value))} />
           <label>Event Images :</label>
           <input type="file" placeholder="Event Images" multiple onChange={(e) => setEventImages(e.target.files ? e.target.files[0] : null)} />
           <label>Event Poster :</label>
@@ -192,14 +199,31 @@ export function OrganizerDashboard() {
         {events.map((event, index) => (
           <div key={index} className="event">
             <h3>{event.name}</h3>
-            <p><u>Name</u>: {event.name}</p>
-            <p><u>Location</u>: {event.location}</p>
-            <p><u>City</u>: {event.city}</p>
-            <p><u>Description</u>: {event.description}</p>
-            <p><u>Tags</u>: {event.tags}</p>
-            <p><u>Event Id</u>: {event.event_id}</p>
-            <p><u>Poster</u>:</p>
-            <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} height="256"/>
+            <p>
+              <u>Name</u>: {event.name}
+            </p>
+            <p>
+              <u>Location</u>: {event.location}
+            </p>
+            <p>
+              <u>Event Date</u>: {event.date.toLocaleString()}
+            </p>
+            <p>
+              <u>City</u>: {event.city}
+            </p>
+            <p>
+              <u>Description</u>: {event.description}
+            </p>
+            <p>
+              <u>Tags</u>: {event.tags}
+            </p>
+            <p>
+              <u>Event Id</u>: {event.event_id}
+            </p>
+            <p>
+              <u>Poster</u>:
+            </p>
+            <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} height="256" alt="Poster" />
             <p>Event Images: </p>
             {event.images && (
               <div>
