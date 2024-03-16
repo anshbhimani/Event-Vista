@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import './OrganizerDashboard.css';
-import { navigate } from 'wouter/use-hash-location';
 
 type Event = {
   name: string;
@@ -159,7 +158,7 @@ export function OrganizerDashboard() {
 
   
   return (
-    <div className="organizer-dashboard">
+    <div className="organizer-dashboard" style={{ backgroundColor: '#17591865' }}>
       <h2 className='Welcome'>
         Welcome {OrganizerName}!!
         <br/>
@@ -179,7 +178,7 @@ export function OrganizerDashboard() {
           <input type="text" placeholder="Location" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} />
           <input type="text" placeholder="City" value={eventCity} onChange={(e) => setEventCity(e.target.value)} />
           <label>Event Images :</label>
-          <input type="file" placeholder="Event Images" onChange={(e) => setEventImages(e.target.files ? e.target.files[0] : null)} />
+          <input type="file" placeholder="Event Images" multiple onChange={(e) => setEventImages(e.target.files ? e.target.files[0] : null)} />
           <label>Event Poster :</label>
           <input type="file" placeholder="Event Poster" onChange={(e) => setEventPoster(e.target.files ? e.target.files[0] : null)} />
           <textarea placeholder="Description" value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} />

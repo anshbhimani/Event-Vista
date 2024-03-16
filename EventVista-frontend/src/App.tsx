@@ -1,20 +1,20 @@
 // App.tsx
 import { Route, Switch } from 'wouter'; // Import Switch from wouter
-import { RegistrationForm } from './RegistrationForm';
-import { LoginForm } from './LoginForm';
 import { Dashboard } from './Dashboard';
 import { DashboardNavbar } from './DashboardNavbar';
 import { ForgotPassword } from './ForgotPassword';
 import { AttendeeDashboard } from './AttendeeDashboard';
 import { OrganizerDashboard } from './OrganizerDashboard';
+import { LoginSignup } from './Login';
 
 function App() {
   return (
     <div className="app">
       <Switch> {/* Use Switch to ensure only one route is rendered */}
         <Route path="/" component={HomePage} />
-        <Route path="/login" component={LoginForm} />
-        <Route path="/register" component={RegistrationForm} />
+        // <Route path="/login" component={LoginSignup} />
+        <Route path='login' component={LoginSignup}/>
+        <Route path="/register" component={LoginSignup} />
         <Route path="/dashboard">
           <DashboardNavbar />
           <Dashboard />
