@@ -75,6 +75,13 @@ export function OrganizerDashboard() {
 
   const handleAddOrEditEvent = async () => {
     try {
+      
+      if(eventDate && eventDate.getTime() < Date.now())
+      {
+        alert('Please select a date in future!!')
+        return;
+      }
+
       const formData = new FormData();
       formData.append('name', eventName);
       formData.append('location', eventLocation);
