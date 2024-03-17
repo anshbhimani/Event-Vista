@@ -9,6 +9,10 @@
   margin-bottom: 10px;
 }
 
+.event-image {
+  margin-right: 15px; /* Adjust the margin as needed */
+}
+
 .logout-container{
   display: flex;
   justify-content: flex-end;

@@ -287,6 +287,7 @@ export function OrganizerDashboard() {
                 height="256"
                 width="256"
                 alt={`Event Image ${index + 1}`}
+                className='event-image'
               />
             ))}
             
