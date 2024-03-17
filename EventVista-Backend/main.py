@@ -2,10 +2,10 @@ import importlib
 from subprocess import call
 from bson import ObjectId  # Import ObjectId for generating unique identifiers
 from bson.binary import Binary
-from flask import Flask, jsonify, request, make_response, send_file
+from flask import Flask, jsonify, request, make_response, stream_with_context,Response
 from flask_cors import CORS
-from gridfs import GridFS
 from pymongo import MongoClient
+from gridfs import GridFS
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
@@ -31,7 +31,7 @@ try:
 
     # Access a specific database (EventVista in our case)
     my_database = client["EventVista"]
-
+    fs = GridFS(my_database)  # Initialize GridFS
     # Access a specific collection within the database
     users = my_database["Users"]
     events = my_database["Events"]
@@ -111,27 +111,33 @@ try:
             # Retrieve form data including images
             data = request.form.to_dict()
             event_id = str(ObjectId())
-
-            fs = GridFS(my_database)  # Initialize GridFS
+            poster_id = str(ObjectId())
+            event_images = []
             
             # Save event images as binary data in GridFS
             images = request.files.getlist('image')
-            image_ids = []
-            for i, image_file in enumerate(images):
-                image_data = Binary(image_file.read())
-                fs.put(image_data, filename=f'Image_{event_id}_{i}')  # Store image in GridFS
-                image_ids.append(str(fs.find_one({"filename": f'Image_{event_id}_{i}'}).id))  # Store ID
+            if images:
+                print("Found images!!")
+                for image in images:
+                    image_id = fs.put(image, filename=image.filename)
+                    event_images.append(image_id)
+                    
+            # Convert ObjectId objects to string representation
+            event_images_str = [str(image_id) for image_id in event_images]
             
+            # Save event_images to data dictionary
+            data['event_images'] = event_images_str
+                    
             # Save poster image as binary data
             poster_file = request.files.get('poster')
             if poster_file:
-                poster_data = Binary(poster_file.read())
-                data['poster'] = poster_data
+                print("Found Poster")
+                poster_id = fs.put(poster_file.read(), filename="poster.jpg")
+                data['poster'] = str(poster_id)
 
             # Save other event details to the database
             data['_id'] = event_id
             data['event_id'] = event_id
-            data['images'] = image_ids  # Store image IDs in the event document
             
             events.insert_one(data)
 
@@ -143,6 +149,17 @@ try:
     @app.route('/api/delete_event/<event_id>', methods=['DELETE'])  # Route for deleting events
     def delete_event(event_id):
         try:
+             # Retrieve the event document
+            event = events.find_one({"event_id": event_id})
+            if not event:
+                return jsonify({"error": "Event not found"}), 404
+            
+            if 'poster' in event:
+                # Retrieve the poster ID
+                poster_id = event['poster']
+                # Delete the poster from GridFS
+                fs.delete(ObjectId(poster_id))
+                
             # Delete the event from the database
             result = events.delete_one({"event_id": event_id})
             if result.deleted_count > 0:
@@ -165,9 +182,6 @@ try:
                 
                 if 'poster' in data:
                     data['poster'] = str(data['poster'])
-                    
-                if 'images' in data:
-                    data['images'] = [str(image_id) for image_id in data['images']]
                         
                 event_list.append(data)
             
@@ -181,27 +195,22 @@ try:
         try:
             # Retrieve form data including images
             data = request.form.to_dict()
-
-            fs = GridFS(my_database)  # Initialize GridFS
+            event_images = []
+            
+            # Save event images as binary data in GridFS
+            images = request.files.getlist('image')
+            for image in images:
+                image_id = fs.put(image, filename=image.filename)
+                event_images.append(image_id)
+                
+            # Convert event_images to list of strings (IDs)
+            data['event_images'] = [str(image_id) for image_id in event_images]
 
             # Save poster image as binary data
             poster_file = request.files.get('poster')
             if poster_file:
                 poster_data = Binary(poster_file.read())
-                data['poster'] = poster_data
-                
-            # Update event images if provided
-            if 'image' in request.files:
-                # Retrieve the list of new images
-                new_images = request.files.getlist('image')
-                
-                image_ids = []
-                for i, image_file in enumerate(new_images):
-                    image_data = Binary(image_file.read())
-                    fs.put(image_data, filename=f'Image_{event_id}_{i}')  # Store image in GridFS
-                    image_ids.append(str(fs.find_one({"filename": f'Image_{event_id}_{i}'}).id))  # Store ID
-                    
-                data['images'] = image_ids  # Update image IDs in the event document
+                data['poster'] = poster_data            
 
             # Update the event details in the database
             result = events.update_one({"event_id": event_id}, {"$set": data})
@@ -226,17 +235,24 @@ try:
                 return jsonify({"error": "Poster not found for this event"}), 404
 
             # Retrieve the poster data from the database
-            poster_data = event['poster']
+            # poster_data = event['poster']
+            
+            # Retrieve the poster ID from the event data
+            poster_id = event['poster']
+
+            # Retrieve the poster data from GridFS using the poster ID
+            poster_file = fs.get(ObjectId(poster_id))
 
             # Create a response containing the poster data
-            response = make_response(poster_data)
+            response = make_response(poster_file.read())
+
             response.headers.set('Content-Type', 'image/jpeg')
             return response
         except Exception as e:
             return jsonify({"error": "Error retrieving event poster"}), 500
 
-    @app.route('/api/get_event_image/<event_id>/<image_index>', methods=['GET'])
-    def get_event_image(event_id, image_index):
+    @app.route('/api/get_event_image/<event_id>', methods=['GET'])
+    def get_event_image(event_id):
         try:
             # Query the MongoDB collection to get the document containing the event
             event = events.find_one({"event_id": event_id})
@@ -244,24 +260,23 @@ try:
             if not event:
                 return jsonify({"error": "Event not found"}), 404
 
-            # Check if the event has images
-            if 'images' not in event:
-                return jsonify({"error": "Images not found for this event"}), 404
-
-            image_index = int(image_index)
-            images = event['images']
-
-            if image_index >= len(images):
-                return jsonify({"error": "Image not found"}), 404
-
-            fs = GridFS(my_database)  # Initialize GridFS
-
-            # Retrieve the image from GridFS using the image ID
-            image_id = images[image_index]
-            image = fs.get(ObjectId(image_id))
-
-            # Return the image file
-            return send_file(image, mimetype='image/jpeg')
+            event_images = event.get('event_images',[])
+            
+            if not event_images:
+                return jsonify({"error": "No images found for this event"}), 404
+                
+            image_data_list = []
+            
+            for image_id in event_images:
+                print("Retrieving image with ID:", image_id)
+                # Retrieve the image data from GridFS using the image ID
+                image_file = fs.get(ObjectId(image_id))
+                image_data = image_file.read()
+                print("Image data size:", len(image_data))  
+                image_data_list.append(image_data)
+            
+            print("Total images retrieved:", len(image_data_list))
+            return Response(b''.join(image_data_list), mimetype='image/jpeg')
         except Exception as e:
             return jsonify({"error": "Error retrieving event image"}), 500
     

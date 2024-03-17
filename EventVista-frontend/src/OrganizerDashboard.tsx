@@ -91,7 +91,8 @@ export function OrganizerDashboard() {
 
       if (eventImages) {
         for (let i = 0; i < eventImages.length; i++) {
-          formData.append(`image_${i}`, eventImages[i]);
+          // formData.append(`event_image_${i}`, eventImages[i]);
+          formData.append('image',eventImages[i])
         }
       }
       formData.append('description', eventDescription);
@@ -112,6 +113,10 @@ export function OrganizerDashboard() {
         method = 'PUT';
       }
 
+      console.log(formData.get('organizer_name'))
+      console.log(formData.get('poster'))
+      console.log(formData.get('image'))
+      
       const response = await fetch(url, {
         method: method,
         body: formData,
@@ -119,7 +124,8 @@ export function OrganizerDashboard() {
 
       if (response.ok) {
         const eventData = await response.json();
-        window.location.reload()
+        // window.location.reload()
+        // temporary uncomment above code afterwards
 
         if (editIndex !== null) {
           const updatedEvents = [...events];
@@ -204,7 +210,7 @@ export function OrganizerDashboard() {
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           <label>Event Images : </label>
-          <input type="file" placeholder="Event Images" multiple onChange={(e) => setEventImages(e.target.files ? e.target.files[0] : null)} />
+          <input type="file" placeholder="Event Images" multiple onChange={(e) => setEventImages(e.target.files)} />
           <label>Event Poster :</label>
           <input type="file" placeholder="Event Poster" onChange={(e) => setEventPoster(e.target.files ? e.target.files[0] : null)} />
           <label>Event Description :</label>
@@ -243,18 +249,14 @@ export function OrganizerDashboard() {
               <u>Event Id</u>: {event.event_id}
             </p>
             <p>
-              <u>Poster</u>:
+              <u>Event Poster</u>:
             </p>
             <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} height="256" width="256" alt="Poster" />
-            <p>Event Images: </p>
-            {event.images && (
-              <div>
-                <p>Images:</p>
-                {event.images.map((imageUrl, i) => (
-                  <img key={i} src={imageUrl} alt={`Event Image ${i + 1}`} height="256" /> // Display image using image URL
-                ))}
-              </div>
-            )}
+            <p>
+              <u>Event Images</u>:
+            </p>
+            <img src={`http://127.0.0.1:5000/api/get_event_image/${event.event_id}`} height="256" width="256"/>
+            
             <div className="button-container">
               <button onClick={() => handleEditEvent(index)}>Edit</button>
               <button onClick={() => handleDeleteEvent(index)}>Delete</button>
