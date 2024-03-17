@@ -19,6 +19,7 @@ export function OrganizerDashboard() {
   const [eventCity, setEventCity] = useState('');
   const [eventDate, setEventDate] = useState<Date | null>(null);
   const [eventImages, setEventImages] = useState<File[] | null>(null);
+  const [numberofEventImages,setNumberofEventImages] = useState(0);
   const [eventDescription, setEventDescription] = useState('');
   const [eventPoster, setEventPoster] = useState<File | null>(null);
   const [eventTags, setEventTags] = useState<string>('');
@@ -36,22 +37,46 @@ export function OrganizerDashboard() {
     }
   }, [OrganizerId]);
 
+  const SetNumberofEventImages = async (event_id: string) => {
+    try{
+      const response = await fetch(`http://localhost:5000/api/get_event_image_count/${event_id}`);
+
+      if(response.ok){
+        const data = await response.json();
+        console.log("Number of images : " + data)
+        setNumberofEventImages(data)
+      }
+      else{
+        console.error('Failed to fetch n:', response.statusText);
+      }
+    }
+    catch(error){
+      console.error('Error fetching n:', error);
+    }
+  }
+  
   const fetchEvents = async (organizerId: string) => {
     try {
       const response = await fetch(`http://127.0.0.1:5000/api/get_events?organizer_id=${organizerId}`);
       if (response.ok) {
         const eventData = await response.json();
-        const mappedEvents = eventData.map((event: any) => ({
-          name: event.name || '', // Handle null values appropriately
-          location: event.location || '', // Handle null values appropriately
-          city: event.city || '', // Handle null values appropriately
-          date: new Date(event.date), // Convert to Date object
-          description: event.description || '', // Handle null values appropriately
-          tags: event.tags ? event.tags.split(',') : [], // Convert tags string to array
-          event_id: event.event_id || '', // Handle null values appropriately
-          images: event.images
-        }));
-        setEvents(mappedEvents);
+        const mappedEvents = eventData.map(async (event: any) => {
+          // Call SetNumberofEventImages here
+          await SetNumberofEventImages(event.event_id); // Await here to ensure completion
+          return {
+            name: event.name || '',
+            location: event.location || '',
+            city: event.city || '',
+            date: new Date(event.date),
+            description: event.description || '',
+            tags: event.tags ? event.tags.split(',') : [],
+            event_id: event.event_id || '',
+            images: event.images || [],
+          };
+        });
+        // Resolve all promises
+        const resolvedEvents = await Promise.all(mappedEvents);
+        setEvents(resolvedEvents);
       } else {
         console.error('Failed to fetch events:', response.statusText);
       }
@@ -255,7 +280,15 @@ export function OrganizerDashboard() {
             <p>
               <u>Event Images</u>:
             </p>
-            <img src={`http://127.0.0.1:5000/api/get_event_image/${event.event_id}`} height="256" width="256"/>
+            {Array.from({ length: numberofEventImages }).map((_, index) => (
+              <img
+                key={index}
+                src={`http://127.0.0.1:5000/api/get_event_image/${event.event_id}/${index}`}
+                height="256"
+                width="256"
+                alt={`Event Image ${index + 1}`}
+              />
+            ))}
             
             <div className="button-container">
               <button onClick={() => handleEditEvent(index)}>Edit</button>

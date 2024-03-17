@@ -251,8 +251,23 @@ try:
         except Exception as e:
             return jsonify({"error": "Error retrieving event poster"}), 500
 
-    @app.route('/api/get_event_image/<event_id>', methods=['GET'])
-    def get_event_image(event_id):
+    @app.route('/api/get_event_image_count/<event_id>',methods=['GET'])
+    def get_number_of_event_images(event_id):
+        try:
+            event = events.find_one({"event_id": event_id})
+
+            if not event:
+                return jsonify({"error": "Event not found"}), 404
+
+            event_images = event.get('event_images', [])
+            image_count = len(event_images)
+
+            return jsonify(image_count), 200
+        except Exception as e:
+            return jsonify({"error": "Error retrieving event image count"}), 500
+            
+    @app.route('/api/get_event_image/<event_id>/<int:image_index>', methods=['GET'])
+    def get_event_image(event_id,image_index):
         try:
             # Query the MongoDB collection to get the document containing the event
             event = events.find_one({"event_id": event_id})
@@ -265,21 +280,19 @@ try:
             if not event_images:
                 return jsonify({"error": "No images found for this event"}), 404
                 
-            image_data_list = []
-            
-            for image_id in event_images:
-                print("Retrieving image with ID:", image_id)
-                # Retrieve the image data from GridFS using the image ID
-                image_file = fs.get(ObjectId(image_id))
-                image_data = image_file.read()
-                print("Image data size:", len(image_data))  
-                image_data_list.append(image_data)
-            
-            print("Total images retrieved:", len(image_data_list))
-            return Response(b''.join(image_data_list), mimetype='image/jpeg')
+            event_images = event.get('event_images', [])
+        
+            if not event_images or image_index >= len(event_images):
+                return jsonify({"error": "Image not found for this event"}), 404
+
+            image_id = event_images[image_index]
+            # Retrieve the image data from GridFS using the image ID
+            image_file = fs.get(ObjectId(image_id))
+            image_data = image_file.read()
+            return Response(image_data, mimetype='image/jpeg')
         except Exception as e:
             return jsonify({"error": "Error retrieving event image"}), 500
-    
+        
     @app.route('/api/get_attendee_events', methods=['GET'])
     def get_attendee_events():
         try:
