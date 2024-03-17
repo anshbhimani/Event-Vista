@@ -2,20 +2,16 @@ import importlib
 from subprocess import call
 from bson import ObjectId  # Import ObjectId for generating unique identifiers
 from bson.binary import Binary
-from flask import Flask, jsonify, request, make_response
+from flask import Flask, jsonify, request, make_response, send_file
 from flask_cors import CORS
 from gridfs import GridFS
 from pymongo import MongoClient
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
-from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
-
-# Configure upload folder
-app.config['UPLOAD_FOLDER'] = 'uploads'
 
 # Check and install dependencies
 def check_install_dependency(module_name):
@@ -36,9 +32,9 @@ try:
     # Access a specific database (EventVista in our case)
     my_database = client["EventVista"]
 
-    # Access a specific collection within the database (Users in our case)
+    # Access a specific collection within the database
     users = my_database["Users"]
-    events = my_database["Events"]  # Add a collection for storing events
+    events = my_database["Events"]
 
     @app.route('/api/get_data', methods=['GET'])
     def get_data():
@@ -116,12 +112,16 @@ try:
             data = request.form.to_dict()
             event_id = str(ObjectId())
 
-            i=0
-            for i, image_file in enumerate(request.files.getlist('image')):
+            fs = GridFS(my_database)  # Initialize GridFS
+            
+            # Save event images as binary data in GridFS
+            images = request.files.getlist('image')
+            image_ids = []
+            for i, image_file in enumerate(images):
                 image_data = Binary(image_file.read())
-                data[f'Image_{event_id}_{i}'] = image_data
-                i = i + 1
-
+                fs.put(image_data, filename=f'Image_{event_id}_{i}')  # Store image in GridFS
+                image_ids.append(str(fs.find_one({"filename": f'Image_{event_id}_{i}'}).id))  # Store ID
+            
             # Save poster image as binary data
             poster_file = request.files.get('poster')
             if poster_file:
@@ -131,6 +131,7 @@ try:
             # Save other event details to the database
             data['_id'] = event_id
             data['event_id'] = event_id
+            data['images'] = image_ids  # Store image IDs in the event document
             
             events.insert_one(data)
 
@@ -138,77 +139,6 @@ try:
         except Exception as e:
             return jsonify({"error": "Error adding event"}), 500
 
-    @app.route('/api/update_event/<event_id>', methods=['PUT'])  # Route for updating events
-    def update_event(event_id):
-        try:
-            # Retrieve form data including images
-            data = request.form.to_dict()
-
-            # Save poster image as binary data
-            poster_file = request.files.get('poster')
-            if poster_file:
-                poster_data = Binary(poster_file.read())
-                data['poster'] = poster_data
-                
-            # Update event images if provided
-            if 'images' in request.files:
-                # Retrieve the list of new images
-                new_images = request.files.getlist('image')
-                
-                # Save new images to GridFS
-                fs = GridFS(my_database)
-                for i, image_file in enumerate(new_images):
-                    image_data = Binary(image_file.read())
-                    image_id = fs.put(image_data, filename=f"Image_{event_id}_{i}.jpg")
-                    data[f"Image_{event_id}_{i}.jpg"] = str(image_id)
-
-            # Update the event details in the database
-            result = events.update_one({"event_id": event_id}, {"$set": data})
-            if result.modified_count > 0:
-                return jsonify({"message": "Event updated successfully"}), 200
-            else:
-                return jsonify({"error": "Event not found"}), 404
-        except Exception as e:
-            return jsonify({"error": "Error updating event"}), 500
-
-    @app.route('/api/get_event_poster/<event_id>', methods=['GET'])
-    def get_event_poster(event_id):
-        try:
-            # Query the MongoDB collection to get the document containing the event
-            event = events.find_one({"event_id": event_id})
-
-            if not event:
-                return jsonify({"error": "Event not found"}), 404
-
-            # Check if the event has a poster
-            if 'poster' in event:
-                # Set the content type to image/jpeg
-                response = make_response(event['poster'])
-                response.headers['Content-Type'] = 'image/jpeg'
-                return response
-            else:
-                return jsonify({"error": "Poster not found for this event"}), 404
-        except Exception as e:
-            return jsonify({"error": "Error getting event poster"}), 500
-
-    @app.route('/api/get_event_images/<event_id>', methods=['GET'])
-    def get_event_images(event_id):
-        try:
-            fs = GridFS(my_database)
-            event_images = fs.find({'filename': {'$regex': f'^Image_{event_id}_'}})
-            image_list = []
-            
-            for image in event_images:
-                image_dict = {
-                    'image_id': str(image._id),
-                    'image_data': image.read(),
-                    'filename': image.filename
-                }
-                image_list.append(image_dict)
-            
-            return jsonify(image_list)
-        except Exception as e:
-            return jsonify({"error": "Error getting event images"}), 500
 
     @app.route('/api/delete_event/<event_id>', methods=['DELETE'])  # Route for deleting events
     def delete_event(event_id):
@@ -221,7 +151,7 @@ try:
                 return jsonify({"error": "Event not found"}), 404
         except Exception as e:
             return jsonify({"error": "Error deleting event"}), 500
-        
+
     @app.route('/api/get_events', methods=['GET'])
     def get_events():
         try: 
@@ -245,33 +175,119 @@ try:
         except Exception as e:
             print(e)
             return jsonify({"error": "Error Fetching events from MongoDB server"}), 500
-
-    @app.route('/api/get_image/<event_id>/<image_index>', methods=['GET'])
-    def get_image(event_id, image_index):
+        
+    @app.route('/api/update_event/<event_id>', methods=['PUT'])  # Route for updating events
+    def update_event(event_id):
         try:
-            # Query the MongoDB collection to get the document containing the image data
+            # Retrieve form data including images
+            data = request.form.to_dict()
+
+            fs = GridFS(my_database)  # Initialize GridFS
+
+            # Save poster image as binary data
+            poster_file = request.files.get('poster')
+            if poster_file:
+                poster_data = Binary(poster_file.read())
+                data['poster'] = poster_data
+                
+            # Update event images if provided
+            if 'image' in request.files:
+                # Retrieve the list of new images
+                new_images = request.files.getlist('image')
+                
+                image_ids = []
+                for i, image_file in enumerate(new_images):
+                    image_data = Binary(image_file.read())
+                    fs.put(image_data, filename=f'Image_{event_id}_{i}')  # Store image in GridFS
+                    image_ids.append(str(fs.find_one({"filename": f'Image_{event_id}_{i}'}).id))  # Store ID
+                    
+                data['images'] = image_ids  # Update image IDs in the event document
+
+            # Update the event details in the database
+            result = events.update_one({"event_id": event_id}, {"$set": data})
+            if result.modified_count > 0:
+                return jsonify({"message": "Event updated successfully"}), 200
+            else:
+                return jsonify({"error": "Event not found"}), 404
+        except Exception as e:
+            return jsonify({"error": "Error updating event"}), 500
+
+    @app.route('/api/get_event_poster/<event_id>', methods=['GET'])
+    def get_event_poster(event_id):
+        try:
+            # Query the MongoDB collection to get the document containing the event
             event = events.find_one({"event_id": event_id})
 
             if not event:
                 return jsonify({"error": "Event not found"}), 404
 
-            # Extract the image binary data from the document
-            images = event.get('images', [])
+            # Check if the event has a poster
+            if 'poster' not in event:
+                return jsonify({"error": "Poster not found for this event"}), 404
 
-            if not images or int(image_index) >= len(images):
-                return jsonify({"error": "Image not found"}), 404
+            # Retrieve the poster data from the database
+            poster_data = event['poster']
 
-            # Get the binary image data
-            image_binary = images[int(image_index)]
-            
-            # Set the content type to image/jpeg
-            response = make_response(image_binary)
-            response.headers['Content-Type'] = 'image/jpeg'
-            
+            # Create a response containing the poster data
+            response = make_response(poster_data)
+            response.headers.set('Content-Type', 'image/jpeg')
             return response
         except Exception as e:
-            return jsonify({"error": "Error getting image"}), 500
-        
+            return jsonify({"error": "Error retrieving event poster"}), 500
+
+    @app.route('/api/get_event_image/<event_id>/<image_index>', methods=['GET'])
+    def get_event_image(event_id, image_index):
+        try:
+            # Query the MongoDB collection to get the document containing the event
+            event = events.find_one({"event_id": event_id})
+
+            if not event:
+                return jsonify({"error": "Event not found"}), 404
+
+            # Check if the event has images
+            if 'images' not in event:
+                return jsonify({"error": "Images not found for this event"}), 404
+
+            image_index = int(image_index)
+            images = event['images']
+
+            if image_index >= len(images):
+                return jsonify({"error": "Image not found"}), 404
+
+            fs = GridFS(my_database)  # Initialize GridFS
+
+            # Retrieve the image from GridFS using the image ID
+            image_id = images[image_index]
+            image = fs.get(ObjectId(image_id))
+
+            # Return the image file
+            return send_file(image, mimetype='image/jpeg')
+        except Exception as e:
+            return jsonify({"error": "Error retrieving event image"}), 500
+    
+    @app.route('/api/get_attendee_events', methods=['GET'])
+    def get_attendee_events():
+        try:
+            event_data = events.find()
+            event_list = []
+
+            for event in event_data:
+                # Convert MongoDB document to dictionary
+                event_dict = {}
+                for key, value in event.items():
+                    if isinstance(value, ObjectId):
+                        event_dict[key] = str(value)  # Convert ObjectId to string
+                    elif isinstance(value, bytes):
+                        continue  # Exclude binary data
+                    else:
+                        event_dict[key] = value
+                event_list.append(event_dict)
+
+            return jsonify(event_list)
+        except Exception as e:
+            print("Error:", e)
+            return jsonify({"error": "Error fetching event data from MongoDB"}), 500
+
     def send_email(body, to_email):
         from_email = 'python.project.smtp@gmail.com'
         password = 'wimgovktbckwfnkx'

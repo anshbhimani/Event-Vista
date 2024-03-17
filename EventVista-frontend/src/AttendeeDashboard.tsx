@@ -1,108 +1,64 @@
 import { useState, useEffect } from 'react';
-import './AttendeeDashboard.css'
+import './AttendeeDashboard.css';
+import { navigate } from 'wouter/use-browser-location';
 
 export function AttendeeDashboard() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [attendeeName] = useState(() => localStorage.getItem('organizerName') ?? '');
+  const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const nav = document.querySelector('nav');
-      if (nav) {
-        if (window.pageYOffset >= 20) {
-          nav.classList.add('nav');
-        } else {
-          nav.classList.remove('nav');
-        }
-
-        if (window.pageYOffset >= 700) {
-          nav.classList.add('navBlack');
-        } else {
-          nav.classList.remove('navBlack');
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
+    fetchEvents();
   }, []);
 
-  const toggleMenu = () => {
-    setMenuOpen((prev) => !prev);
+  const fetchEvents = async () => {
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/api/get_attendee_events`);
+
+      if (response.ok) {
+        const eventsData = await response.json();
+        const mappedEvents = eventsData.map(event => ({
+          name: event.name || '',
+          location: event.location || '',
+          city: event.city || '',
+          date: new Date(event.date),
+          description: event.description || '',
+          tags: event.tags ? event.tags.split(',') : [],
+          event_id: event.event_id || '',
+          images: event.images || []
+        }));
+        setEvents(mappedEvents);
+      } else {
+        console.error('Failed to fetch events:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching events for attendees:', error);
+    }
+  };
+
+  const handleEventClick = (event) => {
+    // Encode the event details as a query parameter
+    localStorage.setItem('selectedEvent', JSON.stringify(event));
+    console.log('Selected Event: ', JSON.stringify(event))
+    // Navigate to the event dashboard with event details in the URL
+    navigate(`/event-dashboard`);
   };
 
   return (
-    <div className='attendee-dashboard'>
-      <header>
-        <nav>
-          <p className="logo">
-            multi<span>flex</span>
-          </p>
-          <i className={menuOpen ? 'fa fa-remove' : 'fa fa-bars'} onClick={toggleMenu}></i>
-          <ul id="menu-box" style={{ display: menuOpen ? 'block' : 'none' }}>
-            <div className="marker"></div>
-            <li>main</li>
-            <li>schedules</li>
-            <li>tickets</li>
-            <li>news</li>
-            <li>contact</li>
-            <li>
-              <span>
-                mr.john doe <img src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?cs=srgb&dl=pexels-pixabay-220453.jpg&fm=jpg" alt="Profile" />{' '}
-                <i className="fa fa-angle-down"></i>
-              </span>
-            </li>
-            <li>
-              <b>sign out</b>
-            </li>
-          </ul>
-        </nav>
+    <div className="Attendee-dashboard">
+      <nav>
+        <h2>Welcome {attendeeName}</h2>
+      </nav>
 
-        <div className="popular-movie-slider" style={{ height: '100vh' }}>
-          <img src="https://imageio.forbes.com/blogs-images/scottmendelson/files/2014/10/2v00kg8.jpg?format=jpg&width=1200" className="poster" alt="Movie Poster" />
-
-          <div className="popular-movie-slider-content">
-            <p className="release">2017</p>
-            <h2 className="movie-name">Interstellar</h2>
-            <ul className="category">
-              <p>Science fiction</p>
-              <li>drama</li>
-              <li>action</li>
-            </ul>
-            <p className="desc">
-              Interstellar is a 2014 epic science fiction film co-written, directed, and produced by Christopher Nolan. It stars Matthew McConaughey, Anne Hathaway,
-              Jessica Chastain, Bill Irwin, Ellen Burstyn, Matt Damon, and Michael Caine. Set in a dystopian future where humanity is embroiled in a catastrophic
-              blight and famine, the film follows a group of astronauts who travel through a wormhole near Saturn in search of a new home for humankind.
-            </p>
-
-            <div className="movie-info">
-              <i className="fa fa-clock-o">
-                {' '}
-                &nbsp;&nbsp;&nbsp;<span>164 min.</span>
-              </i>
-              <i className="fa fa-volume-up">
-                {' '}
-                &nbsp;&nbsp;&nbsp;<span>Subtitles</span>
-              </i>
-              <i className="fa fa-circle">
-                {' '}
-                &nbsp;&nbsp;&nbsp;<span>Imdb: <b>9.1/10</b></span>
-              </i>
-            </div>
-
-            <div className="movie-btns">
-              <button>
-                <i className="fa fa-play"></i> &nbsp; Watch trailer
-              </button>
-              <button className="read-more">
-                <i className="fa fa-circle"></i> <i className="fa fa-circle"></i> <i className="fa fa-circle"></i>&nbsp; Read more
-              </button>
-            </div>
+      <div className="event-grid">
+        {events.map((event, index) => (
+          <div key={index} className="event">
+            <a href="/event-dashboard" onClick={() => handleEventClick(event)}>
+              <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} height="256" alt="Poster" />
+              <h3>{event.name}</h3>
+            </a>
           </div>
-        </div>
-      </header>
+        ))}
+      </div>
     </div>
   );
 }

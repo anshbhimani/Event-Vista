@@ -6,7 +6,7 @@ type Event = {
   location: string;
   city: string;
   date: Date;
-  images: File[] | null;
+  images: string[] | null;
   description: string;
   poster: File | null;
   tags: string[];
@@ -49,6 +49,7 @@ export function OrganizerDashboard() {
           description: event.description || '', // Handle null values appropriately
           tags: event.tags ? event.tags.split(',') : [], // Convert tags string to array
           event_id: event.event_id || '', // Handle null values appropriately
+          images: event.images
         }));
         setEvents(mappedEvents);
       } else {
@@ -90,7 +91,7 @@ export function OrganizerDashboard() {
 
       if (eventImages) {
         for (let i = 0; i < eventImages.length; i++) {
-          formData.append(`images[]`, eventImages[i]);
+          formData.append(`image_${i}`, eventImages[i]);
         }
       }
       formData.append('description', eventDescription);
@@ -186,17 +187,31 @@ export function OrganizerDashboard() {
           <h2>Add New Event</h2>
         )}
         <form>
+          <label>Event Name : </label>
           <input type="text" placeholder="Event Name" value={eventName} onChange={(e) => setEventName(e.target.value)} />
+          &nbsp;&nbsp;
+          <label>Event Location : </label>
           <input type="text" placeholder="Location" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} />
+          &nbsp;&nbsp;
+          <label>Event City : </label>
           <input type="text" placeholder="City" value={eventCity} onChange={(e) => setEventCity(e.target.value)} />
-          <label>Event Date :</label>
+          &nbsp;&nbsp;
+          <label>Event Date : </label>
           <input type="datetime-local" placeholder="Date" onChange={(e) => setEventDate(new Date(e.target.value))} />
-          <label>Event Images :</label>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <label>Event Images : </label>
           <input type="file" placeholder="Event Images" multiple onChange={(e) => setEventImages(e.target.files ? e.target.files[0] : null)} />
           <label>Event Poster :</label>
           <input type="file" placeholder="Event Poster" onChange={(e) => setEventPoster(e.target.files ? e.target.files[0] : null)} />
+          <label>Event Description :</label>
           <textarea placeholder="Description" value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} />
+          <label>Event Tags :</label>
           <input type="text" placeholder="Tags (comma-separated)" value={eventTags} onChange={(e) => setEventTags(e.target.value)} />
+          <br/>
           <button type="button" onClick={handleAddOrEditEvent}>{editIndex !== null ? 'Save' : 'Add Event'}</button>
         </form>
       </div>
@@ -230,13 +245,13 @@ export function OrganizerDashboard() {
             <p>
               <u>Poster</u>:
             </p>
-            <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} height="256" alt="Poster" />
+            <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} height="256" width="256" alt="Poster" />
             <p>Event Images: </p>
             {event.images && (
               <div>
                 <p>Images:</p>
-                {event.images.map((image, i) => (
-                  <img key={i} src={`http://127.0.0.1:5000/api/get_event_image/${event.event_id}?index=${i}`} alt={`Event Image ${i + 1}`} height="12" />
+                {event.images.map((imageUrl, i) => (
+                  <img key={i} src={imageUrl} alt={`Event Image ${i + 1}`} height="256" /> // Display image using image URL
                 ))}
               </div>
             )}
