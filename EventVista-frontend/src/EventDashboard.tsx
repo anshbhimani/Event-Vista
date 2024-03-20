@@ -5,7 +5,6 @@ export function EventDashboard() {
   const [eventLocation, setEventLocation] = useState('');
   const [eventCity, setEventCity] = useState('');
   const [eventDate, setEventDate] = useState<Date | null>(null);
-  const [eventImages, setEventImages] = useState<File[] | null>(null);
   const [numberofEventImages, setNumberofEventImages] = useState(0);
   const [eventDescription, setEventDescription] = useState('');
   const [eventTags, setEventTags] = useState<string>('');

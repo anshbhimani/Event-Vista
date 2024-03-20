@@ -10,12 +10,12 @@ type Event = {
   description: string;
   poster: File | null;
   tags: string[];
-  event_id?: string; // Make event_id optional
+  event_id: string;
+  number_of_event_images: number;
 };
 
 export function AdminDashboard() {
   const [events, setEvents] = useState<Event[]>([]);
-  const [numberofEventImages, setNumberofEventImages] = useState<number>(0);
   const [organizerName, setOrganizerName] = useState<string>(() => localStorage.getItem('organizerName') ?? '');
 
   useEffect(() => {
@@ -28,29 +28,13 @@ export function AdminDashboard() {
     setOrganizerName(localStorage.getItem('organizerName') ?? '');
   }, []);
 
-  const SetNumberofEventImages = async (event_id: string) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/get_event_image_count/${event_id}`);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Number of images : " + data)
-        setNumberofEventImages(data)
-      } else {
-        console.error('Failed to fetch n:', response.statusText);
-      }
-    } catch (error) {
-      console.error('Error fetching n:', error);
-    }
-  }
-
   const fetchEvents = async () => {
     try {
       const response = await fetch(`http://127.0.0.1:5000/api/get_admin_events`);
       if (response.ok) {
         const eventData = await response.json();
         const mappedEvents = eventData.map(async (event: any) => {
-          await SetNumberofEventImages(event.event_id);
+          const number_of_event_images = await getNumberOfEventImages(event.event_id)
           return {
             name: event.name || '',
             location: event.location || '',
@@ -60,6 +44,7 @@ export function AdminDashboard() {
             tags: event.tags ? event.tags.split(',') : [],
             event_id: event.event_id || '',
             images: event.images || [],
+            number_of_event_images: number_of_event_images
           };
         });
         const resolvedEvents = await Promise.all(mappedEvents);
@@ -71,6 +56,23 @@ export function AdminDashboard() {
       console.error('Error fetching events:', error);
     }
   };
+
+  const getNumberOfEventImages = async (event_id: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/get_event_image_count/${event_id}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Number of images : " + data);
+        return data;
+      } else {
+        console.error('Failed to fetch number of images:', response.statusText);
+        return 0;
+      }
+    } catch (error) {
+      console.error('Error fetching number of images:', error);
+      return 0;
+    }
+;  }
 
   const handleLogout = () => {
     localStorage.removeItem('organizerId');
@@ -138,16 +140,18 @@ export function AdminDashboard() {
             <p>
               <u>Event Images</u>:
             </p>
-            {event.images && event.images.map((image, idx) => (
-              <img
-                key={idx}
-                src={`http://127.0.0.1:5000/api/get_event_image/${event.event_id}/${idx}`}
-                height="256"
-                width="256"
-                alt={`Event Image ${idx + 1}`}
-                className='event-image'
-              />
-            ))}
+              <div className="event-images">
+              {Array.from({ length: event.number_of_event_images }).map((_, index) => (
+                <img
+                  key={index}
+                  src={`http://127.0.0.1:5000/api/get_event_image/${event.event_id}/${index}`}
+                  height="500"
+                  width="450"
+                  alt={`Event Image ${index + 1}`}
+                  className='event-image'
+                />
+              ))}
+            </div>
             <div className="button-container">
               <button onClick={() => handleDeleteEvent(index)}>Delete</button>
             </div>
