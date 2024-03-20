@@ -72,3 +72,8 @@
   color: yellow;
   font-size: xx-large;
 }
+
+.Event-Images-Section{
+  display: flex;
+  flex-wrap: wrap;
+}

@@ -1,0 +1,29 @@
+.admin-dashboard {
+    background-color: #17591865;
+    width: 100%; /* Ensure the dashboard takes up full width */
+    padding: 20px; /* Add padding for better spacing */
+    box-sizing: border-box; /* Include padding and border in the width */
+  }
+  
+  .admin-dashboard .event-list {
+    margin-top: 20px; /* Add some space between welcome message and event list */
+  }
+  
+  .event {
+    border: 1px solid #ccc;
+    padding: 10px;
+  }
+  
+  .logout-container {
+    text-align: right; /* Align logout button to the right */
+  }
+  
+  .button-container {
+    text-align: right; /* Align delete button to the right */
+  }
+  
+  .event img {
+    display: block; /* Ensure images are displayed as blocks */
+    margin-bottom: 10px; /* Add some space between event images */
+  }
+  

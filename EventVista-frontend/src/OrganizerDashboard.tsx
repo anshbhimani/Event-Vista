@@ -10,6 +10,7 @@ type Event = {
   description: string;
   poster: File | null;
   tags: string[];
+  price: number;
   event_id?: string; // Make event_id optional
 };
 
@@ -20,6 +21,7 @@ export function OrganizerDashboard() {
   const [eventDate, setEventDate] = useState<Date | null>(null);
   const [eventImages, setEventImages] = useState<File[] | null>(null);
   const [numberofEventImages,setNumberofEventImages] = useState(0);
+  const [eventPrice, setEventPrice] = useState<number>(0);
   const [eventDescription, setEventDescription] = useState('');
   const [eventPoster, setEventPoster] = useState<File | null>(null);
   const [eventTags, setEventTags] = useState<string>('');
@@ -72,6 +74,7 @@ export function OrganizerDashboard() {
             tags: event.tags ? event.tags.split(',') : [],
             event_id: event.event_id || '',
             images: event.images || [],
+            price: parseFloat(event.price) || 0
           };
         });
         // Resolve all promises
@@ -97,6 +100,7 @@ export function OrganizerDashboard() {
     setEventDescription(eventToEdit.description);
     setEventPoster(null);
     setEventTags(eventToEdit.tags.join(', '));
+    setEventPrice(eventToEdit.price)
   };
 
   const handleAddOrEditEvent = async () => {
@@ -113,6 +117,7 @@ export function OrganizerDashboard() {
       formData.append('location', eventLocation);
       formData.append('city', eventCity);
       formData.append('date', eventDate?.toISOString() ?? '');
+      formData.append('price', eventPrice.toString())
 
       if (eventImages) {
         for (let i = 0; i < eventImages.length; i++) {
@@ -168,6 +173,7 @@ export function OrganizerDashboard() {
         setEventDescription('');
         setEventPoster(null);
         setEventTags('');
+        setEventPrice('')
         setEditIndex(null);
       } else {
         console.error('Failed to add/update event:', response.statusText);
@@ -243,6 +249,9 @@ export function OrganizerDashboard() {
           <label>Event Tags :</label>
           <input type="text" placeholder="Tags (comma-separated)" value={eventTags} onChange={(e) => setEventTags(e.target.value)} />
           <br/>
+          <label>Event Price :</label>
+          <input type="text" placeholder="Price" value={eventPrice} onChange={(e) => setEventPrice(e.target.value)} />
+          <br/>
           <button type="button" onClick={handleAddOrEditEvent}>{editIndex !== null ? 'Save' : 'Add Event'}</button>
         </form>
       </div>
@@ -271,6 +280,9 @@ export function OrganizerDashboard() {
               <u>Tags</u>: {event.tags}
             </p>
             <p>
+              <u>Price</u>: {event.price}
+            </p>
+            <p>
               <u>Event Id</u>: {event.event_id}
             </p>
             <p>
@@ -280,17 +292,19 @@ export function OrganizerDashboard() {
             <p>
               <u>Event Images</u>:
             </p>
-            {Array.from({ length: numberofEventImages }).map((_, index) => (
-              <img
-                key={index}
-                src={`http://127.0.0.1:5000/api/get_event_image/${event.event_id}/${index}`}
-                height="256"
-                width="256"
-                alt={`Event Image ${index + 1}`}
-                className='event-image'
-              />
-            ))}
-            
+            <div className='Event-Images-Section'>
+              {Array.from({ length: numberofEventImages }).map((_, index) => (
+                <img
+                  key={index}
+                  src={`http://127.0.0.1:5000/api/get_event_image/${event.event_id}/${index}`}
+                  height="256"
+                  width="256"
+                  alt={`Event Image ${index + 1}`}
+                  className='event-image'
+                />
+              ))}
+              
+            </div>
             <div className="button-container">
               <button onClick={() => handleEditEvent(index)}>Edit</button>
               <button onClick={() => handleDeleteEvent(index)}>Delete</button>

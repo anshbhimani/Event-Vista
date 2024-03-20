@@ -8,6 +8,7 @@ import { AttendeeDashboardBackup } from './AttendeeDashboardBackup';
 import { OrganizerDashboard } from './OrganizerDashboard';
 import { LoginSignup } from './Login';
 import { EventDashboard } from './EventDashboard';
+import { AdminDashboard } from './AdminDashboard';
 
 function App() {
   return (
@@ -21,10 +22,12 @@ function App() {
           <DashboardNavbar />
           <Dashboard />
         </Route>
+        
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/organizer-dashboard" component={OrganizerDashboard} />
         <Route path="/attendee-dashboard" component={AttendeeDashboard} /> {/*New route for AttendeeDashboard*/}
         <Route path='/attendee-dashboard-backup' component={AttendeeDashboardBackup} />
+        <Route path='/admin-dashboard' component={AdminDashboard} />
         <Route path='/event-dashboard' component={EventDashboard} />
       </Switch>
     </div>

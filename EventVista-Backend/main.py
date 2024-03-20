@@ -160,6 +160,12 @@ try:
                 # Delete the poster from GridFS
                 fs.delete(ObjectId(poster_id))
                 
+            if 'event_images' in event:
+                event_images = event['event_images']
+                
+                for images in event_images:
+                    fs.delete(ObjectId(images))
+                
             # Delete the event from the database
             result = events.delete_one({"event_id": event_id})
             if result.deleted_count > 0:
@@ -175,6 +181,27 @@ try:
             organizer_id = request.args.get('organizer_id')
             # Fetch all events from the MongoDB collection
             event_data = events.find({'organizer_id': organizer_id})
+            event_list = []
+            
+            for data in event_data:
+                data['_id'] = str(data['_id'])
+                
+                if 'poster' in data:
+                    data['poster'] = str(data['poster'])
+                        
+                event_list.append(data)
+            
+            return jsonify(event_list)
+        except Exception as e:
+            print(e)
+            return jsonify({"error": "Error Fetching events from MongoDB server"}), 500
+        
+    @app.route('/api/get_admin_events', methods=['GET'])
+    def get_admin_events():
+        try: 
+            admin_id = request.args.get('organizer_id')
+            # Fetch all events from the MongoDB collection
+            event_data = events.find()
             event_list = []
             
             for data in event_data:
@@ -209,8 +236,12 @@ try:
             # Save poster image as binary data
             poster_file = request.files.get('poster')
             if poster_file:
-                poster_data = Binary(poster_file.read())
-                data['poster'] = poster_data            
+                poster_id = data['poster']
+                # Delete the poster from GridFS
+                fs.delete(ObjectId(poster_id))
+                print("Found Poster")
+                poster_id = fs.put(poster_file.read(), filename="poster.jpg")
+                data['poster'] = str(poster_id)            
 
             # Update the event details in the database
             result = events.update_one({"event_id": event_id}, {"$set": data})
