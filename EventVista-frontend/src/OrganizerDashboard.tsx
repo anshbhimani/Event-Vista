@@ -11,6 +11,7 @@ type Event = {
   poster: File | null;
   tags: string[];
   price: number;
+  number_of_event_images: number;
   event_id?: string; // Make event_id optional
 };
 
@@ -46,7 +47,7 @@ export function OrganizerDashboard() {
       if(response.ok){
         const data = await response.json();
         console.log("Number of images : " + data)
-        setNumberofEventImages(data)
+        return data
       }
       else{
         console.error('Failed to fetch n:', response.statusText);
@@ -63,8 +64,7 @@ export function OrganizerDashboard() {
       if (response.ok) {
         const eventData = await response.json();
         const mappedEvents = eventData.map(async (event: any) => {
-          // Call SetNumberofEventImages here
-          await SetNumberofEventImages(event.event_id); // Await here to ensure completion
+          const numImages = await SetNumberofEventImages(event.event_id); 
           return {
             name: event.name || '',
             location: event.location || '',
@@ -74,7 +74,8 @@ export function OrganizerDashboard() {
             tags: event.tags ? event.tags.split(',') : [],
             event_id: event.event_id || '',
             images: event.images || [],
-            price: parseFloat(event.price) || 0
+            price: parseFloat(event.price) || 0,
+            number_of_event_images: numImages
           };
         });
         // Resolve all promises
@@ -293,7 +294,7 @@ export function OrganizerDashboard() {
               <u>Event Images</u>:
             </p>
             <div className='Event-Images-Section'>
-              {Array.from({ length: numberofEventImages }).map((_, index) => (
+              {Array.from({ length: event.number_of_event_images }).map((_, index) => (
                 <img
                   key={index}
                   src={`http://127.0.0.1:5000/api/get_event_image/${event.event_id}/${index}`}
