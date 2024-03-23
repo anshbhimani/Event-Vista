@@ -323,7 +323,7 @@ try:
             return Response(image_data, mimetype='image/jpeg')
         except Exception as e:
             return jsonify({"error": "Error retrieving event image"}), 500
-        
+    
     @app.route('/api/get_attendee_events', methods=['GET'])
     def get_attendee_events():
         try:
@@ -347,6 +347,47 @@ try:
             print("Error:", e)
             return jsonify({"error": "Error fetching event data from MongoDB"}), 500
 
+    @app.route('/api/send_interested/<event_id>/<toggle>', methods=['POST'])
+    def send_interested(event_id,toggle):
+        try:
+            # converting the toggle variable to bool
+            toggle = toggle.lower() == 'true'
+            event = events.find_one({"event_id": event_id})
+
+            if not event:
+                return jsonify({"error": "Event not found"}), 404
+            
+            interested_audience = int(event.get('interested_audience', 0))
+            
+            if toggle:
+                interested_audience = interested_audience + 1
+            else:
+                interested_audience = max(0, interested_audience - 1)
+
+            # Update the event with the new interested audience value
+            events.update_one({"event_id": event_id}, {"$set": {"interested_audience": interested_audience}})
+        
+            return jsonify({"message": "Successfully updated interested"}), 200
+        except Exception as e:
+            print("Error in sending interested : ",e.with_traceback)
+            return jsonify({"error": f"Error in sending interested data: {e}"}), 500
+          
+    @app.route('/api/get_interested/<event_id>', methods=['GET'])
+    def get_number_of_interested_audience(event_id):
+        try:
+            event = events.find_one({"event_id": event_id})
+            
+            if not event:
+                return jsonify({"error": "Event not found"}), 404
+
+            number_of_interested = event.get('interested_audience')
+
+            return jsonify(number_of_interested)
+        except Exception as e:
+            print("Error:", e)
+            return jsonify({"error": "Error fetching interested audience"}), 500
+  
+    
     def send_email(body, to_email):
         from_email = 'python.project.smtp@gmail.com'
         password = 'wimgovktbckwfnkx'

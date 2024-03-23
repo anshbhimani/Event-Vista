@@ -1,23 +1,35 @@
 import { useState, useEffect } from 'react';
 
-export function EventDashboard() {
-  const [eventName, setEventName] = useState('');
-  const [eventLocation, setEventLocation] = useState('');
-  const [eventCity, setEventCity] = useState('');
-  const [eventDate, setEventDate] = useState<Date | null>(null);
-  const [numberofEventImages, setNumberofEventImages] = useState(0);
-  const [eventDescription, setEventDescription] = useState('');
-  const [eventTags, setEventTags] = useState<string>('');
-  const [event, setEvent] = useState<any>(null);
+type Event = {
+  event_id: string;
+  name: string;
+  location: string;
+  city: string;
+  date: string;
+  description: string;
+  tags: string[];
+  interested: boolean;
+  images: string[];
+};
 
-  // Define SetNumberofEventImages before using it in useEffect
+export function EventDashboard() {
+  const [eventName, setEventName] = useState<string>('');
+  const [eventLocation, setEventLocation] = useState<string>('');
+  const [eventCity, setEventCity] = useState<string>('');
+  const [eventDate, setEventDate] = useState<Date | null>(null);
+  const [numberofEventImages, setNumberofEventImages] = useState<number>(0);
+  const [eventDescription, setEventDescription] = useState<string>('');
+  const [eventTags, setEventTags] = useState<string>('');
+  const [event, setEvent] = useState<Event | null>(null);
+  const [interestedAudience, setInterestedAudience] = useState<number>(0);
+  const [interested, setInterested] = useState<boolean>(false);
+
   const SetNumberofEventImages = async (event_id: string) => {
     try {
       const response = await fetch(`http://localhost:5000/api/get_event_image_count/${event_id}`);
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Number of images : " + data);
         setNumberofEventImages(data);
       } else {
         console.error('Failed to fetch n:', response.statusText);
@@ -27,11 +39,49 @@ export function EventDashboard() {
     }
   };
 
-  useEffect(() => {
-    // Retrieve the selected event details from localStorage
+  const toggleInterest = async () => {
     const storedEvent = JSON.parse(localStorage.getItem('selectedEvent') || '{}');
+    const newInterested = !interested;
 
-    // Set individual event properties
+    try {
+      const response = await fetch(`http://localhost:5000/api/send_interested/${storedEvent.event_id}/${newInterested}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ interested: newInterested }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to update interest status:', response.statusText);
+        return;
+      }
+
+      setInterested(newInterested);
+      SetInterestedAudience(storedEvent.event_id);
+
+    } catch (error) {
+      console.error('Error updating interest status:', error);
+    }
+  };
+
+  const SetInterestedAudience = async (event_id: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/get_interested/${event_id}`);
+
+      if (response.ok) {
+        const number_of_interested = await response.json();
+        setInterestedAudience(number_of_interested);
+      } else {
+        console.error('Failed to fetch interested audience :', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching interested audience :', error);
+    }
+  };
+
+  useEffect(() => {
+    const storedEvent = JSON.parse(localStorage.getItem('selectedEvent') || '{}');
     setEvent(storedEvent);
     setEventName(storedEvent.name || '');
     setEventLocation(storedEvent.location || '');
@@ -39,18 +89,25 @@ export function EventDashboard() {
     setEventDate(new Date(storedEvent.date) || null);
     setEventDescription(storedEvent.description || '');
     setEventTags(storedEvent.tags ? storedEvent.tags.join(', ') : '');
+    setInterested(storedEvent.interested || false);
 
-    // Call SetNumberofEventImages after setting event_id
     if (storedEvent.event_id) {
       SetNumberofEventImages(storedEvent.event_id);
+      SetInterestedAudience(storedEvent.event_id);
     }
-  }, []); // No dependency here
+  }, []);
 
   return (
     <div>
       {event && (
         <div>
           <h2>{eventName}</h2>
+          <div className='interested-toggle-button-container'>
+            <button onClick={toggleInterest}>
+              {interested ? 'Not Interested' : 'Interested'}
+            </button>
+            <p>Interested Audience: {interestedAudience}</p>
+          </div>
           <p>Event Name: {eventName}</p>
           <p>Event Id: {event.event_id}</p>
           <p>Location: {eventLocation}</p>

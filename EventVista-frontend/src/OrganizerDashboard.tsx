@@ -12,6 +12,7 @@ type Event = {
   tags: string[];
   price: number;
   number_of_event_images: number;
+  number_of_interested_audience: number;
   event_id?: string; // Make event_id optional
 };
 
@@ -21,7 +22,7 @@ export function OrganizerDashboard() {
   const [eventCity, setEventCity] = useState('');
   const [eventDate, setEventDate] = useState<Date | null>(null);
   const [eventImages, setEventImages] = useState<File[] | null>(null);
-  const [numberofEventImages,setNumberofEventImages] = useState(0);
+  const [interestedAudience, setInterestedAudience] = useState(0);
   const [eventPrice, setEventPrice] = useState<number>(0);
   const [eventDescription, setEventDescription] = useState('');
   const [eventPoster, setEventPoster] = useState<File | null>(null);
@@ -40,6 +41,24 @@ export function OrganizerDashboard() {
     }
   }, [OrganizerId]);
 
+  const SetInterestedAudience = async (event_id: string) => {
+    try{
+      const response = await fetch(`http://localhost:5000/api/get_interested/${event_id}`)
+
+      if(response.ok){
+        const number_of_interested = await response.json();
+        return number_of_interested;
+      }
+
+      else{
+        console.error('Failed to fetch Interested Audience:', response.statusText);
+      }
+    }
+    catch (error) {
+      console.error('Error fetching interested audience:', error);
+    }
+  }
+
   const SetNumberofEventImages = async (event_id: string) => {
     try{
       const response = await fetch(`http://localhost:5000/api/get_event_image_count/${event_id}`);
@@ -56,7 +75,7 @@ export function OrganizerDashboard() {
     catch(error){
       console.error('Error fetching n:', error);
     }
-  }
+  };
   
   const fetchEvents = async (organizerId: string) => {
     try {
@@ -64,7 +83,8 @@ export function OrganizerDashboard() {
       if (response.ok) {
         const eventData = await response.json();
         const mappedEvents = eventData.map(async (event: any) => {
-          const numImages = await SetNumberofEventImages(event.event_id); 
+          const numImages = await SetNumberofEventImages(event.event_id);
+          const numAudience = await SetInterestedAudience(event.event_id) 
           return {
             name: event.name || '',
             location: event.location || '',
@@ -75,7 +95,8 @@ export function OrganizerDashboard() {
             event_id: event.event_id || '',
             images: event.images || [],
             price: parseFloat(event.price) || 0,
-            number_of_event_images: numImages
+            number_of_event_images: numImages,
+            number_of_interested_audience: numAudience
           };
         });
         // Resolve all promises
@@ -174,7 +195,7 @@ export function OrganizerDashboard() {
         setEventDescription('');
         setEventPoster(null);
         setEventTags('');
-        setEventPrice('')
+        setEventPrice(0)
         setEditIndex(null);
       } else {
         console.error('Failed to add/update event:', response.statusText);
@@ -270,6 +291,9 @@ export function OrganizerDashboard() {
             </p>
             <p>
               <u>Event Date</u>: {event.date.toLocaleString()}
+            </p>
+            <p>
+              <u>Number of Interested Audience </u>: {event.number_of_interested_audience}
             </p>
             <p>
               <u>City</u>: {event.city}
