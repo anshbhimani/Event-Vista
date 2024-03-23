@@ -43,11 +43,21 @@ export function AttendeeDashboard() {
     navigate(`/event-dashboard`);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('organizerId');
+    localStorage.removeItem('organizerName');
+    window.location.href = '/login';
+  };
+
+
   return (
     <div className="Attendee-dashboard">
       <nav>
         <h2>Welcome {attendeeName}</h2>
       </nav>
+      <div className="logout-container">
+        <button onClick={handleLogout}>Logout</button>
+      </div>
 
       <div className="event-grid">
         {events.map((event, index) => (
