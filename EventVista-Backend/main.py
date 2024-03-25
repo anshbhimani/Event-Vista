@@ -54,8 +54,15 @@ try:
     @app.route('/api/send_data', methods=['POST'])
     def send_data():
         try:
+            user_id = str(ObjectId())
             data = request.json
+            if data['role'] == 'Organizer':
+                data['organizer_id'] = user_id
+                
+            elif data['role'] == 'Attendant':
+                data['attendant_id'] = user_id
             inserted_document = users.insert_one(data)
+            
             return jsonify({"message": "Data inserted successfully"}), 200
         
         except Exception as e:
@@ -76,11 +83,15 @@ try:
 
             # If no user found with the provided email
             if not user:
+                print("User Not Found!!")
                 return jsonify({"error": "User not found"}), 404
 
             # Compare the provided password with the stored password hash
             if user.get('password') == password:
-                return jsonify({"message": "Login successful", "role": user.get('role'), "Organizer_ID": user.get('organizer_id'), "Organizer_Name": user.get('name')}), 200
+                if user.get('role') == 'Organizer':
+                    return jsonify({"message": "Login successful", "role": user.get('role'), "Organizer_ID": user.get('organizer_id'), "Organizer_Name": user.get('name')}), 200
+                elif user.get('role') == 'Attendant':
+                    return jsonify({"message": "Login successful", "role": user.get('role'), "Attendant_ID": user.get('attendant_id'), "Attendant_Name": user.get('name')}), 200
             else:
                 return jsonify({"error": "Incorrect password"}), 401
 
@@ -348,46 +359,53 @@ try:
             return jsonify({"error": "Error fetching event data from MongoDB"}), 500
 
     @app.route('/api/send_interested/<event_id>/<toggle>', methods=['POST'])
-    def send_interested(event_id,toggle):
+    def send_interested(event_id, toggle):
         try:
             # converting the toggle variable to bool
             toggle = toggle.lower() == 'true'
+            data = request.json
+            attendeeId = data.get('attendeeId', '')
+
             event = events.find_one({"event_id": event_id})
 
             if not event:
                 return jsonify({"error": "Event not found"}), 404
-            
-            interested_audience = int(event.get('interested_audience', 0))
+
+            interested_users = event.get('interested_users', [])
             
             if toggle:
-                interested_audience = interested_audience + 1
+                if attendeeId not in interested_users:
+                    interested_users.append(attendeeId)
             else:
-                interested_audience = max(0, interested_audience - 1)
+                if attendeeId in interested_users:
+                    interested_users.remove(attendeeId)
 
-            # Update the event with the new interested audience value
-            events.update_one({"event_id": event_id}, {"$set": {"interested_audience": interested_audience}})
-        
-            return jsonify({"message": "Successfully updated interested"}), 200
+            # Update the event with the new interested_users array
+            events.update_one({"event_id": event_id}, {"$set": {"interested_users": interested_users}})
+            interested_audience = len(interested_users)
+
+            return jsonify({"message": "Successfully updated interested", "interested_audience": interested_audience}), 200
         except Exception as e:
-            print("Error in sending interested : ",e.with_traceback)
+            print("Error in sending interested : ", e.with_traceback)
             return jsonify({"error": f"Error in sending interested data: {e}"}), 500
-          
+
+
     @app.route('/api/get_interested/<event_id>', methods=['GET'])
     def get_number_of_interested_audience(event_id):
         try:
             event = events.find_one({"event_id": event_id})
-            
+
             if not event:
                 return jsonify({"error": "Event not found"}), 404
 
-            number_of_interested = event.get('interested_audience')
+            interested_users = event.get('interested_users', [])
+            number_of_interested = len(interested_users)
 
             return jsonify(number_of_interested)
         except Exception as e:
             print("Error:", e)
             return jsonify({"error": "Error fetching interested audience"}), 500
-  
-    
+
     def send_email(body, to_email):
         from_email = 'python.project.smtp@gmail.com'
         password = 'wimgovktbckwfnkx'

@@ -3,7 +3,7 @@ import './AttendeeDashboard.css';
 import { navigate } from 'wouter/use-browser-location';
 
 export function AttendeeDashboard() {
-  const [attendeeName] = useState(() => localStorage.getItem('organizerName') ?? '');
+  const [attendeeName] = useState(() => localStorage.getItem('Attendant_Name') ?? '');
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
@@ -36,11 +36,15 @@ export function AttendeeDashboard() {
   };
 
   const handleEventClick = (event) => {
-    // Encode the event details as a query parameter
-    localStorage.setItem('selectedEvent', JSON.stringify(event));
-    console.log('Selected Event: ', JSON.stringify(event))
+    // Navigate to the event dashboard with event details in the URL
+    const attendeeId = localStorage.getItem('Attendant_ID') ?? '';
+    localStorage.setItem('selectedEvent', JSON.stringify({ ...event, attendeeId }));
+    localStorage.setItem('AttendeeId', attendeeId);
+    console.log('Selected Event: ', JSON.stringify(event));
+  
     // Navigate to the event dashboard with event details in the URL
     navigate(`/event-dashboard`);
+    console.log('Attendee_id : ', attendeeId)
   };
 
   const handleLogout = () => {

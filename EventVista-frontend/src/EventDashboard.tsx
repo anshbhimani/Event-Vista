@@ -10,6 +10,7 @@ type Event = {
   tags: string[];
   interested: boolean;
   images: string[];
+  attendeeId: string;
 };
 
 export function EventDashboard() {
@@ -23,6 +24,7 @@ export function EventDashboard() {
   const [event, setEvent] = useState<Event | null>(null);
   const [interestedAudience, setInterestedAudience] = useState<number>(0);
   const [interested, setInterested] = useState<boolean>(false);
+  const [attendeeId, setAttendeeId] = useState<string>('');
 
   const SetNumberofEventImages = async (event_id: string) => {
     try {
@@ -49,7 +51,7 @@ export function EventDashboard() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ interested: newInterested }),
+        body: JSON.stringify({ interested: newInterested, attendeeId }),
       });
 
       if (!response.ok) {
@@ -73,15 +75,16 @@ export function EventDashboard() {
         const number_of_interested = await response.json();
         setInterestedAudience(number_of_interested);
       } else {
-        console.error('Failed to fetch interested audience :', response.statusText);
+        console.error('Failed to fetch interested audience:', response.statusText);
       }
     } catch (error) {
-      console.error('Error fetching interested audience :', error);
+      console.error('Error fetching interested audience:', error);
     }
   };
 
   useEffect(() => {
     const storedEvent = JSON.parse(localStorage.getItem('selectedEvent') || '{}');
+    console.log(storedEvent);
     setEvent(storedEvent);
     setEventName(storedEvent.name || '');
     setEventLocation(storedEvent.location || '');
@@ -90,6 +93,7 @@ export function EventDashboard() {
     setEventDescription(storedEvent.description || '');
     setEventTags(storedEvent.tags ? storedEvent.tags.join(', ') : '');
     setInterested(storedEvent.interested || false);
+    setAttendeeId(storedEvent.attendeeId || '');  // Corrected the property name
 
     if (storedEvent.event_id) {
       SetNumberofEventImages(storedEvent.event_id);

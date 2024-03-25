@@ -10,7 +10,7 @@ export function LoginSignup() {
   const [signupPassword, setSignupPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
   const [role, setRole] = useState('');
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const SendEndPoint = "http://127.0.0.1:5000/api/send_data";
   const LoginEndPoint = "http://127.0.0.1:5000/api/login";
@@ -29,23 +29,38 @@ export function LoginSignup() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to login");
+        const errorMessage = await response.text(); // Get the error message from response body
+        throw new Error(errorMessage || "Failed to login");
       }
 
       const userData = await response.json(); // Assuming server returns user data including role
       console.log('Response Data : ', userData);
-      
-      const organizer_id = userData['Organizer_ID'];
       const role = userData['role'];
-      const organizer_name = userData['Organizer_Name'];
 
+      if (role == 'Organizer')
+      {
+        const organizer_id = userData['Organizer_ID'];
+        const organizer_name = userData['Organizer_Name'];
+        localStorage.setItem('userRole', role);
+        localStorage.setItem('organizerId', organizer_id);
+        localStorage.setItem('organizerName', organizer_name);
+        console.log('Organizer ID stored in local storage:', organizer_id); 
+        console.log('Organizer Name : ', organizer_name);  
+      }
+
+      else if(role == 'Attendant')
+      {
+        const attendant_id = userData['Attendant_ID'];
+        const role = userData['role'];
+        const attendant_name = userData['Attendant_Name'];
+        localStorage.setItem('userRole', role);
+        localStorage.setItem('Attendant_ID', attendant_id);
+        localStorage.setItem('Attendant_Name', attendant_name);
+        console.log('Attendant ID stored in local storage:', attendant_id); 
+        console.log('Attendant Name : ', attendant_name);
+      }
       // Store user role and organizer ID in local storage
-      localStorage.setItem('userRole', role);
-      localStorage.setItem('organizerId', organizer_id);
-      localStorage.setItem('organizerName', organizer_name);
-      console.log('Organizer ID stored in local storage:', organizer_id); 
-      console.log('Organizer Name : ', organizer_name);
-
+     
       setLoginEmail('');
       setLoginPassword('');
 
@@ -101,7 +116,8 @@ export function LoginSignup() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to register");
+        const errorMessage = await response.text(); // Get the error message from response body
+        throw new Error(errorMessage || `${response.statusText}`);
       }
 
       setSignupName('');
@@ -143,6 +159,7 @@ export function LoginSignup() {
                           <i className="input-icon fa fa-lock"></i>
                         </div>
                         <button onClick={handleLogin} className="btn mt-4">Login</button>
+                        {error && <p className="error-message">{error}</p>}
                         <p className="mb-0 mt-4 text-center">
                           <a href="#0" className="link">Forgot your password?</a>
                         </p>
