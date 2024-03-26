@@ -4,7 +4,7 @@ import { Dashboard } from './Dashboard';
 import { DashboardNavbar } from './DashboardNavbar';
 import { ForgotPassword } from './ForgotPassword';
 import { AttendeeDashboard } from './AttendeeDashboard';
-import { AttendeeDashboardBackup } from './AttendeeDashboardBackup';
+import { EventDashboardBackup } from './EventDashboard2';
 import { OrganizerDashboard } from './OrganizerDashboard';
 import { LoginSignup } from './Login';
 import { EventDashboard } from './EventDashboard';
@@ -26,7 +26,7 @@ function App() {
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/organizer-dashboard" component={OrganizerDashboard} />
         <Route path="/attendee-dashboard" component={AttendeeDashboard} /> {/*New route for AttendeeDashboard*/}
-        <Route path='/attendee-dashboard-backup' component={AttendeeDashboardBackup} />
+        <Route path='/event-dashboard-backup' component={EventDashboardBackup} />
         <Route path='/admin-dashboard' component={AdminDashboard} />
         <Route path='/event-dashboard' component={EventDashboard} />
       </Switch>

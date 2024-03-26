@@ -228,7 +228,7 @@ try:
             return jsonify({"error": "Error Fetching events from MongoDB server"}), 500
         
     @app.route('/api/update_event/<organizer_id>/<event_id>', methods=['PUT'])  # Route for updating events
-    def update_event(event_id,organizer_id):
+    def update_event(organizer_id, event_id):
         try:
             # Retrieve form data including images
             data = request.form.to_dict()
@@ -377,16 +377,19 @@ try:
                 return jsonify({"error": "Event not found"}), 404
 
             interested_users = event.get('interested_users', [])
+            interested_audience = event.get('interested_audience')
             
             if toggle:
                 if attendeeId not in interested_users:
                     interested_users.append(attendeeId)
+                    interested_audience = interested_audience + 1
             else:
                 if attendeeId in interested_users:
                     interested_users.remove(attendeeId)
+                    interested_audience = interested_audience - 1
 
             # Update the event with the new interested_users array
-            events.update_one({"event_id": event_id}, {"$set": {"interested_users": interested_users}})
+            events.update_one({"event_id": event_id}, {"$set": {"interested_users": interested_users, "interested_audience" : interested_audience}})
             interested_audience = len(interested_users)
 
             return jsonify({"message": "Successfully updated interested", "interested_audience": interested_audience}), 200

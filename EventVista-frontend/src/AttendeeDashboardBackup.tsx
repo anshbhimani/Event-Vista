@@ -36,30 +36,6 @@ export function AttendeeDashboardBackup() {
   return (
     <div className='attendee-dashboard'>
       <header>
-        <nav>
-          <p className="logo">
-            multi<span>flex</span>
-          </p>
-          <i className={menuOpen ? 'fa fa-remove' : 'fa fa-bars'} onClick={toggleMenu}></i>
-          <ul id="menu-box" style={{ display: menuOpen ? 'block' : 'none' }}>
-            <div className="marker"></div>
-            <li>main</li>
-            <li>schedules</li>
-            <li>tickets</li>
-            <li>news</li>
-            <li>contact</li>
-            <li>
-              <span>
-                mr.john doe <img src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?cs=srgb&dl=pexels-pixabay-220453.jpg&fm=jpg" alt="Profile" />{' '}
-                <i className="fa fa-angle-down"></i>
-              </span>
-            </li>
-            <li>
-              <b>sign out</b>
-            </li>
-          </ul>
-        </nav>
-
         <div className="popular-movie-slider" style={{ height: '100vh' }}>
           <img src="https://imageio.forbes.com/blogs-images/scottmendelson/files/2014/10/2v00kg8.jpg?format=jpg&width=1200" className="poster" alt="Movie Poster" />
 
