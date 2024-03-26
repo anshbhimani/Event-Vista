@@ -161,7 +161,7 @@ export function LoginSignup() {
                         <button onClick={handleLogin} className="btn mt-4">Login</button>
                         {error && <p className="error-message">{error}</p>}
                         <p className="mb-0 mt-4 text-center">
-                          <a href="#0" className="link">Forgot your password?</a>
+                          <a href="/forgot-password" className="link">Forgot your password?</a>
                         </p>
                       </div>
                     </div>
