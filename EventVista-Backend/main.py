@@ -1,8 +1,7 @@
 import importlib
 from subprocess import call
 from bson import ObjectId  # Import ObjectId for generating unique identifiers
-from bson.binary import Binary
-from flask import Flask, jsonify, request, make_response, stream_with_context,Response
+from flask import Flask, jsonify, request, make_response,Response
 from flask_cors import CORS
 from pymongo import MongoClient
 from gridfs import GridFS
@@ -228,40 +227,46 @@ try:
             print(e)
             return jsonify({"error": "Error Fetching events from MongoDB server"}), 500
         
-    @app.route('/api/update_event/<event_id>', methods=['PUT'])  # Route for updating events
-    def update_event(event_id):
+    @app.route('/api/update_event/<organizer_id>/<event_id>', methods=['PUT'])  # Route for updating events
+    def update_event(event_id,organizer_id):
         try:
             # Retrieve form data including images
             data = request.form.to_dict()
             event_images = []
             
-            # Save event images as binary data in GridFS
-            images = request.files.getlist('image')
-            for image in images:
-                image_id = fs.put(image, filename=image.filename)
-                event_images.append(image_id)
-                
-            # Convert event_images to list of strings (IDs)
-            data['event_images'] = [str(image_id) for image_id in event_images]
+            if data['organizer_id'] == organizer_id:
+                # Save event images as binary data in GridFS
+                images = request.files.getlist('image')
+                if images:
+                    for image in images:
+                        image_id = fs.put(image, filename=image.filename)
+                        event_images.append(image_id)
+                        
+                # Convert event_images to list of strings (IDs)
+                data['event_images'] = [str(image_id) for image_id in event_images]
 
-            # Save poster image as binary data
-            poster_file = request.files.get('poster')
-            if poster_file:
-                poster_id = data['poster']
-                # Delete the poster from GridFS
-                fs.delete(ObjectId(poster_id))
-                print("Found Poster")
-                poster_id = fs.put(poster_file.read(), filename="poster.jpg")
-                data['poster'] = str(poster_id)            
+                # Save poster image as binary data
+                poster_file = request.files.get('poster')
+                if poster_file:
+                    poster_id = data['poster']
+                    # Delete the poster from GridFS
+                    fs.delete(ObjectId(poster_id))
+                    print("Found Poster")
+                    poster_id = fs.put(poster_file.read(), filename="poster.jpg")
+                    data['poster'] = str(poster_id)            
 
-            # Update the event details in the database
-            result = events.update_one({"event_id": event_id}, {"$set": data})
-            if result.modified_count > 0:
-                return jsonify({"message": "Event updated successfully"}), 200
+                # Update the event details in the database
+                result = events.update_one({"event_id": event_id}, {"$set": data})
+                if result.modified_count > 0:
+                    return jsonify({"message": "Event updated successfully"}), 200
+                else:
+                    return jsonify({"error": "Event not found"}), 404
+            
             else:
-                return jsonify({"error": "Event not found"}), 404
+                return jsonify({"error": "You are not authorized to edit this event"}), 401
         except Exception as e:
             return jsonify({"error": "Error updating event"}), 500
+
 
     @app.route('/api/get_event_poster/<event_id>', methods=['GET'])
     def get_event_poster(event_id):

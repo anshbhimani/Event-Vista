@@ -110,6 +110,16 @@ export function OrganizerDashboard() {
     }
   };
 
+  const handleEventImageUpload = (e: { target: { files: any[]; }; }) =>{
+    const files = e.target.files;
+    setEventImages(files)
+  };
+
+  const handleEventPosterUpload = (e: { target: { files: any; }; }) =>{
+    const file = e.target.files[0];
+    setEventPoster(file)
+  };
+
   const handleEditEvent = (index: number) => {
     const eventToEdit = events[index];
     setEditIndex(index);
@@ -130,55 +140,55 @@ export function OrganizerDashboard() {
       
       if(eventDate && eventDate.getTime() < Date.now())
       {
-        alert('Please select a date in future!!')
+        alert('Please select a date in the future!!')
         return;
       }
-
+  
       const formData = new FormData();
       formData.append('name', eventName);
       formData.append('location', eventLocation);
       formData.append('city', eventCity);
       formData.append('date', eventDate?.toISOString() ?? '');
       formData.append('price', eventPrice.toString())
-
+  
       if (eventImages) {
         for (let i = 0; i < eventImages.length; i++) {
-          // formData.append(`event_image_${i}`, eventImages[i]);
-          formData.append('image',eventImages[i])
+          formData.append('image', eventImages[i]);
         }
       }
       formData.append('description', eventDescription);
       formData.append('tags', eventTags);
-
+  
       if (eventPoster) {
         formData.append('poster', eventPoster);
       }
-
+  
       formData.append('organizer_id', OrganizerId);
       formData.append('organizer_name', OrganizerName);
-
+  
       let url = `http://127.0.0.1:5000/api/add_event?organizer_id=${OrganizerId}`;
       let method = 'POST';
-
+  
       if (editIndex !== null) {
         url = `http://127.0.0.1:5000/api/update_event/${events[editIndex].event_id}`;
         method = 'PUT';
+        
+        // Remove the images and poster from formData if they are not selected for update
+        if (!eventImages) {
+          formData.delete('image');
+        }
+        if (!eventPoster) {
+          formData.delete('poster');
+        }
       }
-
-      console.log(formData.get('organizer_name'))
-      console.log(formData.get('poster'))
-      console.log(formData.get('image'))
       
       const response = await fetch(url, {
         method: method,
         body: formData,
       });
-
+  
       if (response.ok) {
         const eventData = await response.json();
-        // window.location.reload()
-        // temporary uncomment above code afterwards
-
         if (editIndex !== null) {
           const updatedEvents = [...events];
           updatedEvents[editIndex] = eventData;
@@ -186,7 +196,7 @@ export function OrganizerDashboard() {
         } else {
           setEvents([...events, eventData]);
         }
-
+  
         setEventName('');
         setEventLocation('');
         setEventCity('');
@@ -203,7 +213,9 @@ export function OrganizerDashboard() {
     } catch (error) {
       console.error('Error adding/updating event:', error);
     }
-  };
+};
+
+  
 
   const handleLogout = () => {
     localStorage.removeItem('organizerId');
@@ -263,9 +275,9 @@ export function OrganizerDashboard() {
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           <label>Event Images : </label>
-          <input type="file" placeholder="Event Images" multiple onChange={(e) => setEventImages(e.target.files)} />
+          <input type="file" placeholder="Event Images" multiple onChange={handleEventImageUpload} />
           <label>Event Poster :</label>
-          <input type="file" placeholder="Event Poster" onChange={(e) => setEventPoster(e.target.files ? e.target.files[0] : null)} />
+          <input type="file" placeholder="Event Poster" onChange={handleEventPosterUpload} />
           <label>Event Description :</label>
           <textarea placeholder="Description" value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} />
           <label>Event Tags :</label>
