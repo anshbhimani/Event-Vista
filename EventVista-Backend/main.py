@@ -49,7 +49,7 @@ try:
             return jsonify(user_list)
         except Exception as e:
             return jsonify({"error": "Error Fetching data from MongoDB server"}), 500
-        
+    
     @app.route('/api/send_data', methods=['POST'])
     def send_data():
         try:
@@ -127,7 +127,7 @@ try:
             password = 'Password@123'
             body = f'Password is {password}'
             filter = {'email': email}  # Fix syntax error here
-            update = {'$set': {'password': password}}
+            update = {'$set': {'password': password, 'tries':5}}
             result = users.update_one(filter, update)
             if result.modified_count > 0:
                 send_email(body, email,'Here is your temporary password')  # Pass recipient's email address here

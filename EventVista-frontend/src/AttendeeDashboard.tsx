@@ -49,6 +49,7 @@ export function AttendeeDashboard() {
 
   const handleLogout = () => {
     localStorage.clear()
+    
     window.location.href = '/login';
   };
 
