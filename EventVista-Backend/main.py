@@ -57,9 +57,11 @@ try:
             data = request.json
             if data['role'] == 'Organizer':
                 data['organizer_id'] = user_id
+                data['tries'] = 6
                 
             elif data['role'] == 'Attendant':
                 data['attendant_id'] = user_id
+                data['tries'] = 6
             inserted_document = users.insert_one(data)
             
             return jsonify({"message": "Data inserted successfully"}), 200
@@ -70,13 +72,14 @@ try:
     @app.route('/api/login', methods=['POST'])
     def login():
         try:
-            data=request.json
+            data = request.json
             email = data.get('email')
             password = data.get('password')
             
-             # Check if email and password are provided
+            # Check if email and password are provided
             if not email or not password:
                 return jsonify({"error": "Email and password are required"}), 400
+            
             # Query the database to find a user with the provided email
             user = users.find_one({"email": email})
 
@@ -84,17 +87,36 @@ try:
             if not user:
                 print("User Not Found!!")
                 return jsonify({"error": "User not found"}), 404
-
+            else:
+                print(f"Found User {user.get('email')}")
+            
+            tries = int(user.get('tries', 6))  # Initialize tries from user data or default to 6
+            
             # Compare the provided password with the stored password hash
-            if user.get('password') == password:
+            if user.get('password') == password and tries>0:
                 if user.get('role') == 'Organizer':
                     return jsonify({"message": "Login successful", "role": user.get('role'), "Organizer_ID": user.get('organizer_id'), "Organizer_Name": user.get('name')}), 200
                 elif user.get('role') == 'Attendant':
                     return jsonify({"message": "Login successful", "role": user.get('role'), "Attendant_ID": user.get('attendant_id'), "Attendant_Name": user.get('name')}), 200
             else:
-                return jsonify({"error": "Incorrect password"}), 401
+                tries -= 1
+                users.update_one({"email": email}, {"$set": {"tries": tries}})
+                send_email(f"You have entered an incorrect password!! \n {tries} more tries left", user.get('email'), "Incorrect Password Attempt!!")
+                print('Tries : ' + str(tries))  # Convert tries to string before concatenating
+                
+                if tries <= 0:
+                    send_email(f"Your account is now blocked", user.get('email'), "Account Blocked!!")
+                    print(f"Your account is now blocked")
+                    return jsonify({"error": "Account blocked", "tries": tries}), 401
+                else:
+                    return jsonify({"error": "Incorrect password", "tries": tries}), 401
+                        
+        except smtplib.SMTPException as e:
+            print("Error sending email!! " + str(e))
+            return jsonify({"error": "Error sending email"}), 500
 
         except Exception as e:
+            print("Error Processing Login Request " + str(e))
             return jsonify({"error": "Error processing login request"}), 500
 
     @app.route('/api/forgot_password', methods=['POST'])

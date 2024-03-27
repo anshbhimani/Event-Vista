@@ -11,6 +11,7 @@ export function LoginSignup() {
   const [repeatPassword, setRepeatPassword] = useState('');
   const [role, setRole] = useState('');
   const [error, setError] = useState('');
+  const [loginCount,setLoginCount] = useState('')
 
   const SendEndPoint = "http://127.0.0.1:5000/api/send_data";
   const LoginEndPoint = "http://127.0.0.1:5000/api/login";
@@ -28,12 +29,16 @@ export function LoginSignup() {
         }),
       });
 
+      const userData = await response.json();
+
       if (!response.ok) {
-        const errorMessage = await response.text(); // Get the error message from response body
-        throw new Error(errorMessage || "Failed to login");
+        if(userData['tries']<=0)
+        {
+          navigate('/forgot-password')
+        }
+        throw new Error(userData.error || "Failed to login");
       }
 
-      const userData = await response.json(); // Assuming server returns user data including role
       console.log('Response Data : ', userData);
       const role = userData['role'];
 
@@ -117,7 +122,7 @@ export function LoginSignup() {
 
       if (!response.ok) {
         const errorMessage = await response.text(); // Get the error message from response body
-        throw new Error(errorMessage || `${response.statusText}`);
+        throw new Error(errorMessage || `${response.statusText}`  );
       }
 
       setSignupName('');
