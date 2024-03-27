@@ -108,7 +108,7 @@ try:
             update = {'$set': {'password': password}}
             result = users.update_one(filter, update)
             if result.modified_count > 0:
-                send_email(body, email)  # Pass recipient's email address here
+                send_email(body, email,'Here is your temporary password')  # Pass recipient's email address here
                 return jsonify({"message": "Password reset successful. Check your email."}), 200
             else:
                 return jsonify({"error": "User not found"}), 404
@@ -414,14 +414,14 @@ try:
             print("Error:", e)
             return jsonify({"error": "Error fetching interested audience"}), 500
 
-    def send_email(body, to_email):
+    def send_email(body, to_email, subject):
         from_email = 'python.project.smtp@gmail.com'
         password = 'wimgovktbckwfnkx'
         
         msg = MIMEMultipart()
         msg['From'] = from_email
         msg['To'] = to_email
-        msg['Subject'] = 'Here is your temporary password'
+        msg['Subject'] = subject
 
         msg.attach(MIMEText(body, 'plain'))
 

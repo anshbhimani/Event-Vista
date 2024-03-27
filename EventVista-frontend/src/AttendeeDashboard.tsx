@@ -48,8 +48,7 @@ export function AttendeeDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('organizerId');
-    localStorage.removeItem('organizerName');
+    localStorage.clear()
     window.location.href = '/login';
   };
 
