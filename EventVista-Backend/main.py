@@ -105,7 +105,7 @@ try:
                 print('Tries : ' + str(tries))  # Convert tries to string before concatenating
                 
                 if tries <= 0:
-                    send_email(f"Your account is now blocked", user.get('email'), "Account Blocked!!")
+                    send_email(f"Your account is now blocked", user.get('email'), "Account Blocked!!\n Please reset the password by visiting /forgot-password")
                     print(f"Your account is now blocked")
                     return jsonify({"error": "Account blocked", "tries": tries}), 401
                 else:
