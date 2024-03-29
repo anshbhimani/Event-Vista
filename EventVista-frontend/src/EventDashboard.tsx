@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { navigate } from 'wouter/use-browser-location';
 
 type Event = {
   event_id: string;
@@ -82,6 +83,10 @@ export function EventDashboard() {
     }
   };
 
+  const goBack = async() => {
+    navigate('/attendee-dashboard');
+  }
+
   useEffect(() => {
     const storedEvent = JSON.parse(localStorage.getItem('selectedEvent') || '{}');
     console.log(storedEvent);
@@ -103,6 +108,9 @@ export function EventDashboard() {
 
   return (
     <div>
+    <nav>
+      <button onClick={goBack}>Back</button>
+    </nav>
       {event && (
         <div>
           <h2>{eventName}</h2>
