@@ -5,6 +5,7 @@ import { navigate } from 'wouter/use-browser-location';
 export function AttendeeDashboard() {
   const [attendeeName] = useState(() => localStorage.getItem('Attendant_Name') ?? '');
   const [events, setEvents] = useState([]);
+  const [searchInput, setSearchInput] = useState('');
 
   useEffect(() => {
     fetchEvents();
@@ -12,7 +13,11 @@ export function AttendeeDashboard() {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/get_attendee_events`);
+      const queryParams = new URLSearchParams({
+        search: searchInput
+      }).toString();
+
+      const response = await fetch(`http://127.0.0.1:5000/api/get_attendee_events?${queryParams}`);
 
       if (response.ok) {
         const eventsData = await response.json();
@@ -24,7 +29,8 @@ export function AttendeeDashboard() {
           description: event.description || '',
           tags: event.tags ? event.tags.split(',') : [],
           event_id: event.event_id || '',
-          images: event.images || []
+          images: event.images || [],
+          price: event.price || 10111,
         }));
         setEvents(mappedEvents);
       } else {
@@ -53,6 +59,16 @@ export function AttendeeDashboard() {
     window.location.href = '/login';
   };
 
+  const applyFilters = () => {
+    fetchEvents();
+  };
+
+  const resetFilters = () => {
+    setSearchInput('');
+    fetchEvents();
+  };
+
+
 
   return (
     <div className="Attendee-dashboard">
@@ -61,6 +77,16 @@ export function AttendeeDashboard() {
       </nav>
       <div className="logout-container">
         <button onClick={handleLogout}>Logout</button>
+      </div>
+      <div className="search-filter-container">
+        <input 
+          type="text" 
+          placeholder="Search events..." 
+          value={searchInput} 
+          onChange={(e) => setSearchInput(e.target.value)}
+        />
+        <button onClick={applyFilters}>Search</button>
+        <button onClick={resetFilters}>Reset Search</button>
       </div>
 
       <div className="event-grid">
