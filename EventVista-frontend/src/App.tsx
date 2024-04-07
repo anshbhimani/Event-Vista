@@ -9,6 +9,7 @@ import { OrganizerDashboard } from './OrganizerDashboard';
 import { LoginSignup } from './Login';
 import { EventDashboard } from './EventDashboard';
 import { AdminDashboard } from './AdminDashboard';
+import { TicketBooking } from './TicketBooking';
 
 function App() {
   return (
@@ -26,9 +27,10 @@ function App() {
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/organizer-dashboard" component={OrganizerDashboard} />
         <Route path="/attendee-dashboard" component={AttendeeDashboard} /> {/*New route for AttendeeDashboard*/}
-        <Route path='/event-dashboard-backup' component={EventDashboardBackup} />
+        <Route path='/event-dashboard-backup' component={EventDashboard} />
         <Route path='/admin-dashboard' component={AdminDashboard} />
-        <Route path='/event-dashboard' component={EventDashboard} />
+        <Route path='/event-dashboard' component={EventDashboardBackup} />
+        <Route path='/ticket-booking' component={TicketBooking}/>
       </Switch>
     </div>
   );
