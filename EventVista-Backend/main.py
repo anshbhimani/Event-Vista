@@ -365,7 +365,19 @@ try:
     @app.route('/api/get_attendee_events', methods=['GET'])
     def get_attendee_events():
         try:
-            event_data = events.find()
+            tag = request.args.get('tag')
+            start_date = request.args.get('start_date')
+            end_date = request.args.get('end_date')
+
+            query = {}
+            
+            if tag:
+                query['tags'] = {'$regex': f'.*{tag}.*', '$options': 'i'}
+            
+            if start_date and end_date:
+                query['date'] = {'$gte': start_date, '$lte': end_date}
+
+            event_data = events.find(query)
             event_list = []
 
             for event in event_data:
