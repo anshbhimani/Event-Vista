@@ -34,6 +34,7 @@ try:
     # Access a specific collection within the database
     users = my_database["Users"]
     events = my_database["Events"]
+    review = my_database["Reviews"]
 
     @app.route('/api/get_data', methods=['GET'])
     def get_data():
@@ -53,22 +54,29 @@ try:
     @app.route('/api/send_data', methods=['POST'])
     def send_data():
         try:
+            user_data = users.find_one({"email": request.json['email']})
+            
+            if user_data:
+                print("{error: User with this email already exists}")
+                return jsonify({"error": "User with this email already exists"}), 400
+
             user_id = str(ObjectId())
             data = request.json
+            
             if data['role'] == 'Organizer':
                 data['organizer_id'] = user_id
                 data['tries'] = 6
-                
             elif data['role'] == 'Attendant':
                 data['attendant_id'] = user_id
                 data['tries'] = 6
+
             inserted_document = users.insert_one(data)
             
             return jsonify({"message": "Data inserted successfully"}), 200
         
         except Exception as e:
             return jsonify({"error": "Error sending data to MongoDB server"}), 500
-        
+            
     @app.route('/api/login', methods=['POST'])
     def login():
         try:
@@ -94,6 +102,7 @@ try:
             
             # Compare the provided password with the stored password hash
             if user.get('password') == password and tries>0:
+                users.update_one({"email": email}, {"$set": {"tries": 6}})
                 if user.get('role') == 'Organizer':
                     return jsonify({"message": "Login successful", "role": user.get('role'), "Organizer_ID": user.get('organizer_id'), "Organizer_Name": user.get('name')}), 200
                 elif user.get('role') == 'Attendant':
@@ -447,6 +456,26 @@ try:
         except Exception as e:
             print("Error:", e)
             return jsonify({"error": "Error fetching interested audience"}), 500
+    
+    @app.route('/api/submit_review/<event_id>/<attendee_id>', methods=['POST'])
+    def submit_review(event_id,attendee_id):
+        try:
+            data = request.json
+            review = data.get('review', '')
+            rating = data.get('rating', 0)
+            
+            event = events.find_one({"event_id": event_id})
+            
+            if not event:
+                return jsonify({"error": "Event not found"}), 404
+            
+            current_ratings = event.get('ratings', {})
+            current_ratings[str(rating)] = current_ratings.get(str(rating), 0) + 1
+        
+        except Exception as e:
+            print("Error", e)
+            return jsonify({"error": "Error Submitting the Review"}), 500
+            
 
     def send_email(body, to_email, subject):
         from_email = 'python.project.smtp@gmail.com'

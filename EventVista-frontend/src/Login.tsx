@@ -134,7 +134,7 @@ export function LoginSignup() {
       console.log("Registration Successful");
     } catch (error) {
       console.error("Error registering:", error);
-      setError("Failed to register");
+      setError(error.message || "Failed to Register");
     }
   };
 
