@@ -8,6 +8,7 @@ from gridfs import GridFS
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
+import traceback
 from datetime import datetime as dt
 
 app = Flask(__name__)
@@ -169,6 +170,7 @@ try:
             
             # Save event_images to data dictionary
             data['event_images'] = event_images_str
+            data['interested_audience'] = 0
                     
             # Save poster image as binary data
             poster_file = request.files.get('poster')
@@ -259,58 +261,72 @@ try:
             print(e)
             return jsonify({"error": "Error Fetching events from MongoDB server"}), 500
         
-    @app.route('/api/update_event/<organizer_id>/<event_id>', methods=['PUT'])  # Route for updating events
+    @app.route('/api/update_event/<organizer_id>/<event_id>', methods=['PUT'])
     def update_event(organizer_id, event_id):
         try:
-            # Retrieve form data including images
-            data = request.form.to_dict()
+            # Check if the provided organizer_id matches the organizer_id in the event document
             event_data = events.find_one({"event_id": event_id})
-            event_images = []
             
-            if data['organizer_id'] == organizer_id:
-                # Save event images as binary data in GridFS
-                images = request.files.getlist('image')
-                existing_images = event_data.get('event_images', [])
-                if images:
-                    for image in existing_images:
-                        image_id = fs.put(image, filename=image.filename)
-                        event_images.append(image_id)
-                        
-                # Save event images as binary data in GridFS
-                images = request.files.getlist('image')
-                if images:
-                    for image in images:
-                        image_id = fs.put(image, filename=image.filename)
-                        event_images.append(image_id)
+            if event_data is None:
+                return jsonify({"error": "Event not found"}), 404
 
-                # Combine existing and new event images
-                if existing_images:
-                    event_images.extend(existing_images)
-
-                # Save poster image as binary data
-                poster_file = request.files.get('poster')
-                if poster_file:
-                    poster_id = data['poster']
-                    # Delete the poster from GridFS
-                    fs.delete(ObjectId(poster_id))
-                    print("Found Poster")
-                    poster_id = fs.put(poster_file.read(), filename="poster.jpg")
-                    data['poster'] = str(poster_id)            
-
-                # Update the event details in the database
-                result = events.update_one({"event_id": event_id}, {"$set": data})
-                if result.modified_count > 0:
-                    return jsonify({"message": "Event updated successfully"}), 200
-                else:
-                    print(f"{event_id}-Not Found!!")
-                    return jsonify({"error": "Event not found"}), 404
-            
-            else:
+            if event_data['organizer_id'] != organizer_id:
                 return jsonify({"error": "You are not authorized to edit this event"}), 401
-        except Exception as e:
-            print("ERRORRRRRR:     " + str(e))
-            return jsonify({"error": "Error updating event"}), 500
 
+            # Retrieve form data including images
+            form_data = request.form.to_dict()
+            
+            # Update event details
+            for key, value in form_data.items():
+                event_data[key] = value
+            
+            # Save event images as binary data in GridFS
+            new_images = request.files.getlist('image')
+            event_images = event_data.get('event_images', [])
+            
+            if new_images:
+                for image in new_images:
+                    image_id = fs.put(image, filename=image.filename)
+                    event_images.append(str(image_id))
+                        
+            # Convert event_images to list of strings (IDs)
+            event_data['event_images'] = event_images
+            
+            # Save poster image as binary data
+            poster_file = request.files.get('poster')
+            
+            if poster_file:
+                poster_id = event_data.get('poster', '')
+                # Delete the existing poster from GridFS
+                if poster_id:
+                    fs.delete(ObjectId(poster_id))
+                poster_id = fs.put(poster_file.read(), filename="poster.jpg")
+                event_data['poster'] = str(poster_id)
+                    
+            # Prepare the update data
+            update_data = {
+                '$set': {
+                    'name': event_data['name'],
+                    'description': event_data['description'],
+                    'date': event_data['date'],
+                    'location': event_data['location'],
+                    'price': event_data['price'],  # Changed 'price' to lowercase
+                    'event_images': event_data['event_images'],
+                    'poster': event_data['poster']
+                }
+            }
+
+            # Update the event details in the database
+            result = events.update_one({"event_id": event_id}, update_data)
+
+            if result.modified_count > 0:
+                return jsonify({"message": "Event updated successfully"}), 200
+            else:
+                return jsonify({"error": "Event not Modified"}), 500
+
+        except Exception as e:
+            print("ERRORRRRRR:", e)
+            return jsonify({"error": "Error updating event"}), 500
 
     @app.route('/api/get_event_poster/<event_id>', methods=['GET'])
     def get_event_poster(event_id):
@@ -424,6 +440,10 @@ try:
         try:
             # converting the toggle variable to bool
             toggle = toggle.lower() == 'true'
+            # Check if Content-Type is 'application/json'
+            if request.headers.get('Content-Type') != 'application/json':
+                return jsonify({"error": "Unsupported Media Type: Content-Type should be 'application/json'"}), 415
+            
             data = request.json
             attendeeId = data.get('attendeeId', '')
 
@@ -434,6 +454,9 @@ try:
 
             interested_users = event.get('interested_users', [])
             interested_audience = event.get('interested_audience')
+            
+            if(interested_users is None and interested_audience is None):
+                interested_audience = 0
             
             if toggle:
                 if attendeeId not in interested_users:
@@ -450,7 +473,7 @@ try:
 
             return jsonify({"message": "Successfully updated interested", "interested_audience": interested_audience}), 200
         except Exception as e:
-            print("Error in sending interested : ", e.with_traceback)
+            print("Error in sending interested : ", traceback.format_exc())
             return jsonify({"error": f"Error in sending interested data: {e}"}), 500
 
     @app.route('/api/attendee_id_to_name/<attendeeId>', methods=['GET'])

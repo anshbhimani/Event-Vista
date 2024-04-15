@@ -99,6 +99,9 @@ export function OrganizerDashboard() {
         <label>Event Date:</label>
         <input type="datetime-local" placeholder="Select Date and Time" onChange={(e) => setEventDate(new Date(e.target.value))} required />
         
+        <label>Event Price:</label>
+        <input type="number" placeholder="Price" onChange={(e) => setEventPrice(e.target.value)} required />
+
         {editIndex !== null ? (
           <>
             <label>Add new Event Images:</label>
