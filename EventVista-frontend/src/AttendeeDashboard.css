@@ -1,9 +1,13 @@
 html{
-    background: rgb(255, 255, 255) !important;
+  background: rgb(255, 255, 255) !important;
 }
 
 h2 {
     color: red
+}
+
+.Attendee-dashboard{
+  height: 100dvw;
 }
 
 .Event-List ul li {

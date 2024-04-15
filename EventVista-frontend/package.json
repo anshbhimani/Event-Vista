@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "axios": "^1.6.7",
+    "bootstrap": "^3.4.1",
     "mdb-react-ui-kit": "^7.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

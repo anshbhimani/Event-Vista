@@ -8,6 +8,7 @@ from gridfs import GridFS
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
+from datetime import datetime as dt
 
 app = Flask(__name__)
 CORS(app)
@@ -34,7 +35,7 @@ try:
     # Access a specific collection within the database
     users = my_database["Users"]
     events = my_database["Events"]
-    review = my_database["Reviews"]
+    reviews = my_database["Reviews"]
 
     @app.route('/api/get_data', methods=['GET'])
     def get_data():
@@ -156,7 +157,7 @@ try:
             event_images = []
             
             # Save event images as binary data in GridFS
-            images = request.files.getlist('image')
+            images = request.files.getlist('event_images')
             if images:
                 print("Found images!!")
                 for image in images:
@@ -263,18 +264,28 @@ try:
         try:
             # Retrieve form data including images
             data = request.form.to_dict()
+            event_data = events.find_one({"event_id": event_id})
             event_images = []
             
             if data['organizer_id'] == organizer_id:
+                # Save event images as binary data in GridFS
+                images = request.files.getlist('image')
+                existing_images = event_data.get('event_images', [])
+                if images:
+                    for image in existing_images:
+                        image_id = fs.put(image, filename=image.filename)
+                        event_images.append(image_id)
+                        
                 # Save event images as binary data in GridFS
                 images = request.files.getlist('image')
                 if images:
                     for image in images:
                         image_id = fs.put(image, filename=image.filename)
                         event_images.append(image_id)
-                        
-                # Convert event_images to list of strings (IDs)
-                data['event_images'] = [str(image_id) for image_id in event_images]
+
+                # Combine existing and new event images
+                if existing_images:
+                    event_images.extend(existing_images)
 
                 # Save poster image as binary data
                 poster_file = request.files.get('poster')
@@ -291,11 +302,13 @@ try:
                 if result.modified_count > 0:
                     return jsonify({"message": "Event updated successfully"}), 200
                 else:
+                    print(f"{event_id}-Not Found!!")
                     return jsonify({"error": "Event not found"}), 404
             
             else:
                 return jsonify({"error": "You are not authorized to edit this event"}), 401
         except Exception as e:
+            print("ERRORRRRRR:     " + str(e))
             return jsonify({"error": "Error updating event"}), 500
 
 
@@ -440,6 +453,21 @@ try:
             print("Error in sending interested : ", e.with_traceback)
             return jsonify({"error": f"Error in sending interested data: {e}"}), 500
 
+    @app.route('/api/attendee_id_to_name/<attendeeId>', methods=['GET'])
+    def attendee_id_to_name(attendeeId):
+        try:
+            user = users.find_one({"_id": ObjectId(str(attendeeId))})
+
+            if user:
+                name = user.get('name', '')
+                return jsonify({"username": name}), 200
+            else:
+                return jsonify({"error": "User not found"}), 404
+
+        except Exception as e:
+            print("Error converting id to name : ", e.with_traceback)
+            return jsonify({"error": f"Error converting id to name :  {e}"}), 500
+
 
     @app.route('/api/get_interested/<event_id>', methods=['GET'])
     def get_number_of_interested_audience(event_id):
@@ -463,19 +491,46 @@ try:
             data = request.json
             review = data.get('review', '')
             rating = data.get('rating', 0)
+            review_data = {}
             
             event = events.find_one({"event_id": event_id})
             
             if not event:
                 return jsonify({"error": "Event not found"}), 404
+
+            review_data['review'] = review
+            review_data['rating'] = rating
+            review_data['attendee_id'] = attendee_id
+            review_data['event_id'] = event_id
+            review_data['time'] = dt.now()
             
-            current_ratings = event.get('ratings', {})
-            current_ratings[str(rating)] = current_ratings.get(str(rating), 0) + 1
+            reviews.insert_one(review_data)
+            return jsonify({"message": "Successfully Added Review"}), 200
         
         except Exception as e:
             print("Error", e)
             return jsonify({"error": "Error Submitting the Review"}), 500
-            
+    
+    @app.route('/api/get_reviews/<event_id>', methods=['GET'])
+    def get_reviews(event_id):
+        try:
+            event = events.find_one({"event_id": event_id})
+            review_s = reviews.find({"event_id": event_id}) 
+            review_list = []
+
+            if not event:
+                return jsonify({"error": "Event not found"}), 404
+
+            for review in review_s:
+                review['_id'] = str(review['_id'])  # Convert ObjectId to string
+                review_list.append(review)
+
+            return jsonify({"message": "Successfully fetched reviews", "reviews": review_list}), 200
+
+        except Exception as e:
+            print("Error", e)
+            return jsonify({"error": "Error fetching the reviews"}), 500
+        
 
     def send_email(body, to_email, subject):
         from_email = 'python.project.smtp@gmail.com'
@@ -504,4 +559,4 @@ try:
         app.run(debug=True,port=5000)
 
 except Exception as e:
-    print("Error in connecting to Database on MongoDB", e)
+    print("Error : ", e)

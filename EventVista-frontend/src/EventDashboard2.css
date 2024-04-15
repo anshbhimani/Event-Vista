@@ -7,6 +7,22 @@
     overflow: auto; /* Ensure no overflow outside the viewport */
     background-color: #021412; /* Set the desired background color */
   }
+  .card {
+    border-radius: 5px;
+    background-color: #fff;
+    padding-left: 60px;
+    padding-right: 60px;
+    margin-top: 30px;
+    padding-top: 30px;
+    padding-bottom: 30px
+}
+
+.Rating {
+  background-image: linear-gradient(#4A148C, #E53935);
+  background-repeat: no-repeat;
+  color: #000;
+  overflow-x: hidden
+}
   
   *{
     margin:0;
@@ -854,7 +870,6 @@
   }
 
   body {
-    background-image: linear-gradient(#4A148C, #E53935);
     background-repeat: no-repeat;
     color: #000;
     overflow-x: hidden;
@@ -870,6 +885,7 @@ a:hover {
     color: #455A64
 }
 
+
 .card {
     border-radius: 5px;
     background-color: #fff;
@@ -877,7 +893,9 @@ a:hover {
     padding-right: 60px;
     margin-top: 30px;
     padding-top: 30px;
-    padding-bottom: 30px
+    padding-bottom: 30px;
+    width: 500px;
+    margin-left: 30%;
 }
 
 .rating-box {
@@ -989,3 +1007,5 @@ td {
 .vote {
     cursor: pointer
 }
+
+

@@ -10,10 +10,10 @@ import { LoginSignup } from './Login';
 import { EventDashboard } from './EventDashboard';
 import { AdminDashboard } from './AdminDashboard';
 import { TicketBooking } from './TicketBooking';
+import {EventDashboardBackup2} from './test';
 
 function App() {
   return (
-    <div className="app">
       <Switch> {/* Use Switch to ensure only one route is rendered */}
         <Route path="/" component={HomePage} />
         // <Route path="/login" component={LoginSignup} />
@@ -24,6 +24,7 @@ function App() {
           <Dashboard />
         </Route>
         
+        <Route path='/testing-event-dashboard' component={EventDashboardBackup2} />
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/organizer-dashboard" component={OrganizerDashboard} />
         <Route path="/attendee-dashboard" component={AttendeeDashboard} /> {/*New route for AttendeeDashboard*/}
@@ -32,7 +33,6 @@ function App() {
         <Route path='/event-dashboard' component={EventDashboardBackup} />
         <Route path='/ticket-booking' component={TicketBooking}/>
       </Switch>
-    </div>
   );
 }
 

@@ -6,7 +6,7 @@ body {
     font-size: 15px;
     line-height: 1.7;
     color: #fff;
-    background-color: #050d1e65;
+    background-color: #50516ac8;
     overflow-x: hidden
 }
 
@@ -123,7 +123,7 @@ h6 span {
 }
 
 .login-div {
-    width: 150px
+    width: 150px;
 }
 
 .card-front,
@@ -247,7 +247,7 @@ h6 span {
     transition: all 200ms linear
 }
 
-.btn {
+.login .btn {
     border-radius: 4px;
     height: 48px;
     width: 100%;
