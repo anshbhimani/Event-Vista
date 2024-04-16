@@ -10,6 +10,7 @@ from email.mime.text import MIMEText
 import smtplib
 import traceback
 from datetime import datetime as dt
+import json 
 
 app = Flask(__name__)
 CORS(app)
@@ -37,6 +38,7 @@ try:
     users = my_database["Users"]
     events = my_database["Events"]
     reviews = my_database["Reviews"]
+    tickets = my_database["Tickets"]
 
     @app.route('/api/get_data', methods=['GET'])
     def get_data():
@@ -488,8 +490,9 @@ try:
                 return jsonify({"error": "User not found"}), 404
 
         except Exception as e:
-            print("Error converting id to name : ", e.with_traceback)
+            print("Error converting id to name : ", e)
             return jsonify({"error": f"Error converting id to name :  {e}"}), 500
+
 
 
     @app.route('/api/get_interested/<event_id>', methods=['GET'])
@@ -565,7 +568,31 @@ try:
             print("Error in getting reviews : ", traceback.format_exc())
             return jsonify({"error": "Error fetching the reviews"}), 500
 
+    @app.route('/api/book_ticket/<attendee_id>/<event_id>/<qty>', methods=['POST'])
+    def book_ticket(attendee_id, event_id, qty):
+        try:
+            data = request.json
+            booking_data = {}
             
+            booking_data["event_id"] = event_id
+            booking_data["attendee_id"] = attendee_id
+            
+            # Extracting attendee name from the response object
+            attendee_name_response = attendee_id_to_name(attendee_id)
+            attendee_name = json.loads(attendee_name_response.data.decode('utf-8'))['username']
+            
+            booking_data["attendee_name"] = attendee_name
+            booking_data["number_of_tickets"] = qty
+            booking_data["Paid Amount"] = data['Price'] * int(qty)
+            
+            tickets.insert_one(booking_data)
+            return jsonify({
+                "message": "Successfully Booked Ticket",
+            }), 200
+            
+        except Exception as e:
+            print("Error in Booking Tickets : ", traceback.format_exc())
+            return jsonify({"error": "Error in Booking Tickets"}), 500
 
     def send_email(body, to_email, subject):
         from_email = 'python.project.smtp@gmail.com'

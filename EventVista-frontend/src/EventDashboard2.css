@@ -143,7 +143,7 @@
     align-items:center;
   }
   
-  header nav ul li img{
+  header nav ul li{
     width:35px;
     height:35px;
     border-radius:50%;
@@ -167,7 +167,7 @@
     object-fit:cover;
     border-radius:10px;
   }
-  
+
   
   header .popular-movie-slider .popular-movie-slider-content{
     line-height:25px;
@@ -421,7 +421,7 @@
     text-transform:uppercase;
   }
   
-  section .movie-card-section .card img{
+  section .movie-card-section .card{
     width:100%;
     height:350px;
     object-fit:cover;
@@ -712,7 +712,7 @@
   }
     
   
-  section .movie-card-section .card img{
+  section .movie-card-section .card{
     width:100%;
     height:300px;
   }
@@ -818,7 +818,7 @@
   }
     
   
-  section .movie-card-section .card img{
+  section .movie-card-section .card{
     width:100%;
     height:300px;
   }
@@ -1009,3 +1009,6 @@ td {
 }
 
 
+.all-ratings{
+
+}

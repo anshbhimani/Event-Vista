@@ -68,9 +68,9 @@ h6 span {
     height: 16px;
     border-radius: 2px;
     padding: 0;
-    margin: 10px auto;
-    margin-top: 100px;
+    top: 60px;
     margin-left: 620px;
+    margin-bottom: 100px;
     cursor: pointer;
     background-color: #ffffff
 }

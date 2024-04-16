@@ -1,8 +1,82 @@
-.Booking-Event-Details {
-    font-size: large;
-    height: 100dvw;
+.Ticket-Booking {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 20px;
+    font-family: 'Arial', sans-serif;
 }
 
-.poster{
-    height: 350px;
-}   
+.Booking-Event-Details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 80%;
+    margin-bottom: 40px;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.poster img {
+    width: 200px;
+    height: 300px;
+    object-fit: cover;
+}
+
+.Event-Details {
+    flex: 1;
+    padding: 20px;
+    background-color: #0f1346;
+}
+
+.Attendee-Details {
+    width: 80%;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+label {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+p{
+    font-size: larger;
+    color: #ffffff;
+}
+
+h1{
+    color: #eab58a;
+}
