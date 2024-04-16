@@ -533,27 +533,39 @@ try:
         except Exception as e:
             print("Error", e)
             return jsonify({"error": "Error Submitting the Review"}), 500
-    
+
     @app.route('/api/get_reviews/<event_id>', methods=['GET'])
     def get_reviews(event_id):
         try:
             event = events.find_one({"event_id": event_id})
             review_s = reviews.find({"event_id": event_id}) 
             review_list = []
+            total_rating = 0
+            num_reviews = 0
 
             if not event:
+                print("Event Not Found!!")
                 return jsonify({"error": "Event not found"}), 404
 
             for review in review_s:
                 review['_id'] = str(review['_id'])  # Convert ObjectId to string
                 review_list.append(review)
+                total_rating += review.get('rating', 0)
+                num_reviews += 1
 
-            return jsonify({"message": "Successfully fetched reviews", "reviews": review_list}), 200
+            average_rating = total_rating / num_reviews if num_reviews > 0 else 0
+
+            return jsonify({
+                "message": "Successfully fetched reviews",
+                "reviews": review_list,
+                "average_rating": average_rating
+            }), 200
 
         except Exception as e:
-            print("Error", e)
+            print("Error in getting reviews : ", traceback.format_exc())
             return jsonify({"error": "Error fetching the reviews"}), 500
-        
+
+            
 
     def send_email(body, to_email, subject):
         from_email = 'python.project.smtp@gmail.com'

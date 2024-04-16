@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import './EventDashboard2.css'
+import './EventDashboard2.css';
 import { navigate } from 'wouter/use-browser-location';
 
 export function EventDashboardBackup() {
@@ -16,8 +16,10 @@ export function EventDashboardBackup() {
   const [interested, setInterested] = useState<boolean>(false);
   const [eventPrice, setEventPrice] = useState<number>(0);
   const [attendeeId, setAttendeeId] = useState<string>('');
-  const [ratings, setRatings] = useState([]);
-  const [eventReview, setEventReview] = useState('');
+  const [ratings, setRatings] = useState<any[]>([]);
+  const [eventReview, setEventReview] = useState<string>('');
+  const [userRating, setUserRating] = useState<number>(0);
+  const [averageRating, setAverageRating] = useState<number>(0);
 
   const SetNumberofEventImages = async (event_id: string) => {
     try {
@@ -34,7 +36,7 @@ export function EventDashboardBackup() {
     }
   };
 
-  const BookTicket = async() => {
+  const BookTicket = async () => {
     const storedEvent = JSON.stringify({
       event_id,
       name: eventName,
@@ -95,16 +97,56 @@ export function EventDashboardBackup() {
     }
   };
 
+  const submitRating = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/submit_review/${event_id}/${attendeeId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rating: userRating, review: eventReview }),
+      });
 
-  // const fetchRatings = async() => {
-  //   try{
-      
-  //   }
-  // }
+      if (response.ok) {
+        fetchRatings(event_id);  // Fetch ratings after submitting a new one
+      } else {
+        console.error('Failed to submit rating:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+    }
+  };
+
+  const fetchRatings = async (event_id: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/get_reviews/${event_id}`);
+
+      if (response.ok) {
+        const data = await response.json();
+        setRatings(data.reviews);
+        setAverageRating(data.average_rating);
+      } else {
+        console.error('Failed to fetch ratings:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching ratings:', error);
+    }
+  };
+
+  const calculateAverageRating = (ratings: any[]) => {
+    if (ratings.length === 0) {
+      setAverageRating(0);
+      return;
+    }
+    
+    const totalRating = ratings.reduce((acc, curr) => acc + curr.rating, 0);
+    const averageRating = totalRating / ratings.length;
+    setAverageRating(averageRating);
+  };
+
 
   useEffect(() => {
     const storedEvent = JSON.parse(localStorage.getItem('selectedEvent') || '{}');
-    console.log(storedEvent);
     setEventId(storedEvent.event_id);
     setEvent(storedEvent);
     setEventName(storedEvent.name || '');
@@ -117,11 +159,18 @@ export function EventDashboardBackup() {
     setInterested(storedEvent.interested || false);
     setAttendeeId(storedEvent.attendeeId || '');
 
+
     if (storedEvent.event_id) {
       SetNumberofEventImages(storedEvent.event_id);
       SetInterestedAudience(storedEvent.event_id);
+      fetchRatings(storedEvent.event_id);  // Fetch ratings when component mounts
     }
+    
   }, []);
+
+  useEffect(() => {
+    calculateAverageRating(ratings);
+  }, [ratings]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -197,82 +246,57 @@ export function EventDashboardBackup() {
         </div>
         }
       </header>
-      <div className='Rating'>
-        <div>
-        Ansh
-        </div>
-        <div class="container-fluid px-1 py-5 mx-auto">
-          <div class="row justify-content-center">
-            <div class="col-xl-7 col-lg-8 col-md-10 col-12 text-center mb-5">
-              <div className="card">
-                      <div className="row justify-content-left d-flex">
-                          <div className="col-md-4 d-flex flex-column">
-                              <div className="rating-box">
-                                  <h1 className="pt-4">4.0</h1>
-                                  <p className="">out of 5</p>
-                              </div>
-                              <div> <span className="fa fa-star star-active mx-1"></span> <span class="fa fa-star star-active mx-1"></span> <span class="fa fa-star star-active mx-1"></span> <span class="fa fa-star star-active mx-1"></span> <span class="fa fa-star star-inactive mx-1"></span> </div>
-                          </div>
-                          <div className="col-md-8">
-                              <div className="rating-bar0 justify-content-center">
-                                  <table className="text-left mx-auto">
-                                      <tr>
-                                          <td className="rating-label">Excellent</td>
-                                          <td className="rating-bar">
-                                              <div className="bar-container">
-                                                  <div className="bar-5"></div>
-                                              </div>
-                                          </td>
-                                          <td className="text-right">123</td>
-                                      </tr>
-                                      <tr>
-                                          <td className="rating-label">Good</td>
-                                          <td className="rating-bar">
-                                              <div className="bar-container">
-                                                  <div className="bar-4"></div>
-                                              </div>
-                                          </td>
-                                          <td className="text-right">23</td>
-                                      </tr>
-                                      <tr>
-                                          <td className="rating-label">Average</td>
-                                          <td className="rating-bar">
-                                              <div className="bar-container">
-                                                  <div className="bar-3"></div>
-                                              </div>
-                                          </td>
-                                          <td className="text-right">10</td>
-                                      </tr>
-                                      <tr>
-                                          <td className="rating-label">Poor</td>
-                                          <td className="rating-bar">
-                                              <div className="bar-container">
-                                                  <div className="bar-2"></div>
-                                              </div>
-                                          </td>
-                                          <td className="text-right">3</td>
-                                      </tr>
-                                      <tr>
-                                          <td className="rating-label">Terrible</td>
-                                          <td className="rating-bar">
-                                              <div className="bar-container">
-                                                  <div className="bar-1"></div>
-                                              </div>
-                                          </td>
-                                          <td className="text-right">0</td>
-                                      </tr>
-                                  </table>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              <div>
-              Bhimani
-              </div>
-            </div>
+      <div className="event-ratings">
+        <center>
+          <h2>Event Ratings</h2>
+          <div className="rating-input">
+            <label>
+              Your Rating:
+              <select
+                value={userRating}
+                onChange={(e) => setUserRating(Number(e.target.value))}
+              >
+                <option value={0}>0</option>
+                <option value={1}>1</option>
+                <option value={2}>2</option>
+                <option value={3}>3</option>
+                <option value={4}>4</option>
+                <option value={5}>5</option>
+              </select>
+            </label>
+            <label>
+              Your Review:
+              <textarea
+                value={eventReview}
+                onChange={(e) => setEventReview(e.target.value)}
+              />
+            </label>
+            <button onClick={submitRating}>Submit Rating</button>
           </div>
-        </div>
-      </div>    
+          <div className="average-rating">
+            <strong>Average Rating:</strong> {averageRating}
+          </div>
+          <div className="all-ratings">
+          {ratings && ratings.length > 0 ? (
+            ratings.map((rating, index) => (
+              <div key={index} className="rating-item">
+                <div>
+                  <strong>Rating:</strong> {rating.rating}
+                </div>
+                <div>
+                  <strong>Review:</strong> {rating.review}
+                </div>
+                <div>
+                  <strong>Rated By:</strong> {rating.attendee_id}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p>No ratings yet</p>
+          )}
+          </div>
+        </center>
+      </div>
     </div>
   );
 }
