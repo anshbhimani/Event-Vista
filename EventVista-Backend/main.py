@@ -478,21 +478,20 @@ try:
             print("Error in sending interested : ", traceback.format_exc())
             return jsonify({"error": f"Error in sending interested data: {e}"}), 500
 
-    @app.route('/api/attendee_id_to_name/<attendeeId>', methods=['GET'])
     def attendee_id_to_name(attendeeId):
         try:
-            user = users.find_one({"_id": ObjectId(str(attendeeId))})
+            user = users.find_one({"attendant_id": str(attendeeId)})
 
             if user:
                 name = user.get('name', '')
-                return jsonify({"username": name}), 200
+                return name
             else:
-                return jsonify({"error": "User not found"}), 404
+                print("Name not found!!")
+                return None
 
         except Exception as e:
             print("Error converting id to name : ", e)
-            return jsonify({"error": f"Error converting id to name :  {e}"}), 500
-
+            return f"Error converting id to name : {e}"
 
 
     @app.route('/api/get_interested/<event_id>', methods=['GET'])
@@ -574,20 +573,24 @@ try:
             data = request.json
             booking_data = {}
             
+            
             booking_data["event_id"] = event_id
             booking_data["attendee_id"] = attendee_id
             
             # Extracting attendee name from the response object
-            attendee_name_response = attendee_id_to_name(attendee_id)
-            attendee_name = json.loads(attendee_name_response.data.decode('utf-8'))['username']
+            attendee_name = attendee_id_to_name(attendee_id)
             
             booking_data["attendee_name"] = attendee_name
             booking_data["number_of_tickets"] = qty
-            booking_data["Paid Amount"] = data['Price'] * int(qty)
+            booking_data["Paid Amount"] = int(data['Price']) * int(qty)
+            transaction_id = str(ObjectId())
+            booking_data["_id"] = ObjectId(transaction_id)
+            booking_data["transaction_id"] = transaction_id
             
             tickets.insert_one(booking_data)
             return jsonify({
                 "message": "Successfully Booked Ticket",
+                "transaction_id": transaction_id
             }), 200
             
         except Exception as e:

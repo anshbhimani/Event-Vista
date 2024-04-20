@@ -84,69 +84,78 @@ export function OrganizerDashboard() {
   };
   
   const renderForm = () => (
-    <div onClick={closeForm} className={showForm ? "form-popup active" : "form-popup"}>
-      <form className="form-container" style={{ transform: 'scale(0.75)' }}>
-        <h2>{editIndex != null ? 'Edit Event' : 'Add New Event'}</h2>
-        <label>Event Name:</label>
-        <input type="text" placeholder="Event Name" value={eventName} onChange={(e) => setEventName(e.target.value)} required />
-        
-        <label>Event Location:</label>
-        <input type="text" placeholder="Location" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} required />
-        
-        <label>Event City:</label>
-        <input type="text" placeholder="City" value={eventCity} onChange={(e) => setEventCity(e.target.value)} required />
-        
-        <label>Event Date:</label>
-        <input type="datetime-local" placeholder="Select Date and Time" onChange={(e) => setEventDate(new Date(e.target.value))} required />
-        
-        <label>Event Price:</label>
-        <input type="number" placeholder="Price" onChange={(e) => setEventPrice(e.target.value)} required />
-
-        {editIndex !== null ? (
-          <>
-            <label>Add new Event Images:</label>
-            <input type="file" multiple placeholder="Select Images to Update" onChange={handleEventImageUpload} />
-            <label>Select images to update or remove:</label>
-            {Array.from({ length: events[editIndex]?.number_of_event_images ?? 0 }).map((_, index) => (
-              <div key={index}>
-                <input
-                  type="checkbox"
-                  onChange={(e) => handleImageCheckboxChange(index, e.target.checked)}
-                />
-                <img
-                  src={`http://127.0.0.1:5000/api/get_event_image/${events[editIndex]?.event_id}/${index}`}
-                  height="64"
-                  width="64"
-                  alt={`Event Image ${index + 1}`}
-                />
-              </div>
-            ))}
-          </>
-        ) : (
-          <>
-            <label>Event Images:</label>
-            <input type="file" placeholder="Select Images" onChange={handleEventImageUpload} multiple/>
-          </>
-        )}
-        
-        <label>Event Poster:</label>
-        <input type="file" placeholder="Select Poster" onChange={handleEventPosterUpload} />
-        
-        <label>Event Description:</label>
-        <textarea placeholder="Description" value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} required />
-        
-        <label>Event Tags:</label>
-        <input type="text" placeholder="Tags (comma-separated)" value={eventTags} onChange={(e) => setEventTags(e.target.value)} required />
-        
+  <div onClick={closeForm} className={showForm ? "form-popup active" : "form-popup"}>
+    <form className="form-container" style={{ transform: 'scale(0.70)' }}>
+      <h2>{editIndex != null ? 'Edit Event' : 'Add New Event'}</h2>
+      <div className="form-row">
+        <div className="form-column">
+          <label>Event Name:</label>
+          <input type="text" placeholder="Event Name" value={eventName} onChange={(e) => setEventName(e.target.value)} required />
+          
+          <label>Event Location:</label>
+          <input type="text" placeholder="Location" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} required />
+          
+          <label>Event City:</label>
+          <input type="text" placeholder="City" value={eventCity} onChange={(e) => setEventCity(e.target.value)} required />
+          
+          <label>Event Date:</label>
+          <input type="datetime-local" placeholder="Select Date and Time" onChange={(e) => setEventDate(new Date(e.target.value))} required />
+          
+          <label>Event Price:</label>
+          <input type="number" placeholder="Price" onChange={(e) => setEventPrice(e.target.value)} required />
+        </div>
+        <div className="form-column">
+          {editIndex !== null ? (
+            <>
+              <label>Add new Event Images:</label>
+              <input type="file" multiple placeholder="Select Images to Update" onChange={handleEventImageUpload} />
+              <label>Select images to update or remove:</label>
+              {Array.from({ length: events[editIndex]?.number_of_event_images ?? 0 }).map((_, index) => (
+                <div key={index}>
+                  <input
+                    type="checkbox"
+                    onChange={(e) => handleImageCheckboxChange(index, e.target.checked)}
+                  />
+                  <img
+                    src={`http://127.0.0.1:5000/api/get_event_image/${events[editIndex]?.event_id}/${index}`}
+                    height="64"
+                    width="64"
+                    alt={`Event Image ${index + 1}`}
+                  />
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              <label>Event Images:</label>
+              <input type="file" placeholder="Select Images" onChange={handleEventImageUpload} multiple/>
+            </>
+          )}
+          
+          <label>Event Poster:</label>
+          <input type="file" placeholder="Select Poster" onChange={handleEventPosterUpload} />
+          
+          <label>Event Description:</label>
+          <textarea placeholder="Description" value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} required />
+          
+          <label>Event Tags:</label>
+          <input type="text" placeholder="Tags (comma-separated)" value={eventTags} onChange={(e) => setEventTags(e.target.value)} required />
+        </div>
+      </div>
+      
+      <div className="button-container">
         {editIndex !== null ? (
           <button type="button" onClick={() => handleEditEvent(editIndex)}>Save Event</button>
         ) : (
           <button type="button" onClick={handleAddOrEditEvent}>Add Event</button>
         )}
         <button type="button" onClick={() => toggleForm(null)}>Close</button>
-      </form>
-    </div>
-  );
+      </div>
+    </form>
+  </div>
+);
+
+  
   
   
 

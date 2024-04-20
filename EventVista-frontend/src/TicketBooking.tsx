@@ -23,8 +23,8 @@ export function TicketBooking() {
 
   const bookTicket = async () => {
     try {
-       var attendee_id = JSON.parse(localStorage.getItem('selectedEvent'))["attendeeId"];
-        
+      var attendee_id = JSON.parse(localStorage.getItem('selectedEvent'))["attendeeId"];
+
       const response = await fetch(`http://localhost:5000/api/book_ticket/${attendee_id}/${event_id}/${ticketQuantity}`, {
         method: "POST",
         headers: {
@@ -46,8 +46,13 @@ export function TicketBooking() {
     }
   };
 
+  const navigateToEventDashboard = () => {
+    window.location.href = '/event-dashboard'; // Navigate to event-dashboard
+  };
+
   return (
     <div className="Ticket-Booking">
+      <button className='back-button' onClick={navigateToEventDashboard}>Back</button>
       <div className="Booking-Event-Details">
         <div className="poster">
           <img

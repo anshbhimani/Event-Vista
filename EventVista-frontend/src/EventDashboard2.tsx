@@ -49,8 +49,7 @@ export function EventDashboardBackup() {
       interested,
       attendeeId
     });
-
-    localStorage.clear();
+    
     localStorage.setItem('selectedEvent', storedEvent);
     // Redirect or navigate to the booking page
     navigate('/ticket-booking');
@@ -200,6 +199,7 @@ export function EventDashboardBackup() {
   return (
     <div className='event-dashboard'>
       <header>
+      <button className='back-button' onClick={() => navigate('/attendee-dashboard')}>Back</button>
         {event && <div className="popular-movie-slider">
           <img src={`http://127.0.0.1:5000/api/get_event_poster/${event_id}`} className="poster" alt="Movie Poster" />
 

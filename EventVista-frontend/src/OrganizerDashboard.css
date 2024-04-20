@@ -105,12 +105,25 @@ label {
 }
 
 .form-container {
-  width: 60%;
+  width: 80%; /* Increase the width to accommodate the two columns */
   background-color: #ffffff;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
   transform: scale(0.75);
+  display: flex;
+  justify-content: space-between; /* Use flexbox to create the two-column layout */
+}
+
+.form-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.form-column {
+  flex: 1;
+  margin-right: 20px;
 }
 
 .form-container h2 {
@@ -155,5 +168,12 @@ label {
 }
 
 .form-container button[type="button"]:hover {
-  background-color: #c82333;
+  background-color: #0dea3d;
+}
+
+.button-container {
+  display: flex;
+  justify-content: flex-end; /* Move the buttons to the right */
+  width: 100%;
+  margin-top: 20px;
 }

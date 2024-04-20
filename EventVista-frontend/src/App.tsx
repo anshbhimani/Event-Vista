@@ -11,6 +11,7 @@ import { EventDashboard } from './EventDashboard';
 import { AdminDashboard } from './AdminDashboard';
 import { TicketBooking } from './TicketBooking';
 import {EventDashboardBackup2} from './test';
+import { TicketBooking2 } from './TicketBooking2';
 
 function App() {
   return (
@@ -29,6 +30,10 @@ function App() {
         <Route path="/organizer-dashboard" component={OrganizerDashboard} />
         <Route path="/attendee-dashboard" component={AttendeeDashboard} /> {/*New route for AttendeeDashboard*/}
         <Route path='/event-dashboard-backup' component={EventDashboard} />
+        <Route path="/organizer-dashboard" component={OrganizerDashboard} />
+        <Route path="/organizer-dashboard/:eventId" component={EventDashboard} />
+        <Route path="/organizer-dashboard/:eventId/edit" component={EventDashboard} />
+        <Route path="/organizer-dashboard/:eventId/delete" component={EventDashboard} />
         <Route path='/admin-dashboard' component={AdminDashboard} />
         <Route path='/event-dashboard' component={EventDashboardBackup} />
         <Route path='/ticket-booking' component={TicketBooking}/>
