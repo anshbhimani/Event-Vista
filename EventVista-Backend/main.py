@@ -267,20 +267,28 @@ try:
     def update_event(organizer_id, event_id):
         try:
             # Check if the provided organizer_id matches the organizer_id in the event document
-            event_data = events.find_one({"event_id": event_id})
+            event_data = events.find_one({"organizer_id": organizer_id, "event_id": event_id})
             
             if event_data is None:
                 return jsonify({"error": "Event not found"}), 404
 
-            if event_data['organizer_id'] != organizer_id:
-                return jsonify({"error": "You are not authorized to edit this event"}), 401
-
             # Retrieve form data including images
             form_data = request.form.to_dict()
+            
+            # Retrieve removed images
+            removed_images = request.form.get('removed_images')
+            if removed_images:
+                removed_images = json.loads(removed_images)
             
             # Update event details
             for key, value in form_data.items():
                 event_data[key] = value
+
+            # Remove selected images
+            if removed_images:
+                for index in sorted(removed_images, reverse=True):
+                    image_id = event_data['event_images'].pop(index)
+                    fs.delete(ObjectId(image_id))
             
             # Save event images as binary data in GridFS
             new_images = request.files.getlist('image')
@@ -312,23 +320,24 @@ try:
                     'description': event_data['description'],
                     'date': event_data['date'],
                     'location': event_data['location'],
-                    'price': event_data['price'],  # Changed 'price' to lowercase
+                    'price': event_data['price'],  
                     'event_images': event_data['event_images'],
                     'poster': event_data['poster']
                 }
             }
 
             # Update the event details in the database
-            result = events.update_one({"event_id": event_id}, update_data)
+            result = events.update_one({"organizer_id": organizer_id, "event_id": event_id}, update_data)
 
             if result.modified_count > 0:
                 return jsonify({"message": "Event updated successfully"}), 200
             else:
+                print("500 Error")
                 return jsonify({"error": "Event not Modified"}), 500
 
         except Exception as e:
-            print("ERRORRRRRR:", e)
-            return jsonify({"error": "Error updating event"}), 500
+            print(e)
+            return jsonify({"error": "Internal Server Error"}), 500
 
     @app.route('/api/get_event_poster/<event_id>', methods=['GET'])
     def get_event_poster(event_id):

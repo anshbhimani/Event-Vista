@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './OrganizerDashboard.css';
+import { OrganizerEventDashboard } from './Organizer_Event_Dashboard';
 
 type Event = {
   name: string;
@@ -13,7 +14,7 @@ type Event = {
   price: number;
   number_of_event_images: number;
   number_of_interested_audience: number;
-  event_id?: string; // Make event_id optional
+  event_id: string; 
 };
 
 export function OrganizerDashboard() {
@@ -31,6 +32,7 @@ export function OrganizerDashboard() {
   const [OrganizerId] = useState<string>(() => localStorage.getItem('organizerId') ?? '');
   const [OrganizerName] = useState<string>(() => localStorage.getItem('organizerName') ?? '');
   const [showForm, setShowForm] = useState(false);
+  const [eventId,setEventId] = useState('');
 
   useEffect(() => {
     // Fetch organizer ID from local storage
@@ -155,9 +157,7 @@ export function OrganizerDashboard() {
   </div>
 );
 
-  
-  
-  
+
 
   const fetchEvents = async (organizerId: string) => {
     try {
@@ -207,26 +207,7 @@ export function OrganizerDashboard() {
     }
   };
 
-  const handleEditEvent = (index: number) => {
-    if (editIndex !== null) {
-      setEventImages(events[index].images.map(image => new File([image], `image${events[index].images.indexOf(image) + 1}.jpg`)));
-    }
   
-    const eventToEdit = events[index];
-    setEditIndex(index);
-  
-    setEventName(eventToEdit.name);
-    setEventLocation(eventToEdit.location);
-    setEventCity(eventToEdit.city);
-    setEventDate(eventToEdit.date);
-    setEventImages([]);
-    setEventDescription(eventToEdit.description);
-    setEventPoster(null);
-    setEventTags(eventToEdit.tags.join(', '));
-    setEventPrice(eventToEdit.price);
-  
-    toggleForm(index);
-  };
   
   const handleImageCheckboxChange = (index: number, isChecked: boolean) => {
     const newImages = [...(eventImages ?? [])];
@@ -311,6 +292,7 @@ export function OrganizerDashboard() {
         setEventPrice(0);
         setEditIndex(null); // Reset editIndex here
         setShowForm(false);
+        setEventId('')
       } else {
         console.error('Failed to add/update event:', response.statusText);
       }
@@ -326,26 +308,24 @@ export function OrganizerDashboard() {
     window.location.href = '/login';
   };
 
-  const handleDeleteEvent = async (index: number) => {
-    try {
-      const eventToDelete = events[index];
-      const response = await fetch(`http://127.0.0.1:5000/api/delete_event/${eventToDelete.event_id}`, {
-        method: 'DELETE',
-      });
+  const handleEventClick = (e: React.MouseEvent<HTMLAnchorElement>, event: Event) => {
+    e.preventDefault();
+    localStorage.setItem('eventName', event.name);
+    localStorage.setItem('eventCity', event.city); // Use event.city
+    localStorage.setItem('eventDate', event.date?.toISOString()); // Use event.date
+    localStorage.setItem('eventDescription', event.description);
+    localStorage.setItem('eventPrice', event.price.toString()); // Store event price
+    localStorage.setItem('eventTags', event.tags.join(', ')); // Store event tags
+    localStorage.setItem('eventLocation',event.location);
+    localStorage.setItem('eventId',event.event_id)
+    
+    window.location.href = `/organizer-event-dashboard/${event.event_id}`; // Update the URL
+  };  
+  
 
-      if (response.ok) {
-        const updatedEvents = events.filter((event, i) => i !== index);
-        setEvents(updatedEvents);
-      } else {
-        console.error('Failed to delete event:', response.statusText);
-      }
-    } catch (error) {
-      console.error('Error deleting event:', error);
-    }
-  };
-
+  
   return (
-    <div className="organizer-dashboard" style={{ backgroundColor: '#17591865', width: "100%" }}>
+    <div className="Organizer-dashboard">
       <h2 className="Welcome">
         Welcome {OrganizerName}!!
         <br />
@@ -358,63 +338,15 @@ export function OrganizerDashboard() {
         <button className="btn btn-dark" onClick={() => toggleForm(null)}>Add New Event</button>
         {showForm && renderForm()}
       </div>
-
-      <div className="event-list">
-        <h2>Event List</h2>
+      <br/>
+      <br/>
+      <div className="event-grid">
         {events.map((event, index) => (
           <div key={index} className="event">
+          <a href={`/organizer-dashboard/${event.event_id}`} onClick={(e) => handleEventClick(e, event)}>
+            <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} height="256" alt="Poster" />
             <h3>{event.name}</h3>
-            <p>
-              <u>Name</u>: {event.name}
-            </p>
-            <p>
-              <u>Location</u>: {event.location}
-            </p>
-            <p>
-              <u>Event Date</u>: {event.date.toLocaleString()}
-            </p>
-            <p>
-              <u>Number of Interested Audience </u>: {event.number_of_interested_audience}
-            </p>
-            <p>
-              <u>City</u>: {event.city}
-            </p>
-            <p>
-              <u>Description</u>: {event.description}
-            </p>
-            <p>
-              <u>Tags</u>: {event.tags}
-            </p>
-            <p>
-              <u>Price</u>: {event.price}
-            </p>
-            <p>
-              <u>Event Id</u>: {event.event_id}
-            </p>
-            <p>
-              <u>Event Poster</u>:
-            </p>
-            <img src={`http://127.0.0.1:5000/api/get_event_poster/${event.event_id}`} height="256" width="256" alt="Poster" />
-            <p>
-              <u>Event Images</u>:
-            </p>
-            <div className='Event-Images-Section'>
-              {Array.from({ length: event.number_of_event_images }).map((_, index) => (
-                <img
-                  key={index}
-                  src={`http://127.0.0.1:5000/api/get_event_image/${event.event_id}/${index}`}
-                  height="256"
-                  width="256"
-                  alt={`Event Image ${index + 1}`}
-                  className='event-image'
-                />
-              ))}
-              
-            </div>
-            <div className="button-container">
-              <button onClick={() => handleEditEvent(index)}>Edit</button>
-              <button onClick={() => handleDeleteEvent(index)}>Delete</button>
-            </div>
+          </a>        
           </div>
         ))}
       </div>

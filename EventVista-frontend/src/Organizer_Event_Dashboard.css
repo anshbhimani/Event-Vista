@@ -1,0 +1,26 @@
+header {
+    background-image: none;
+    height: auto;
+    background-color: #50516ac8;
+}
+
+.back-button {
+    padding: 10px 20px;
+    background-color: #f44336;
+    /* Red color */
+    color: #fff;
+    /* White text color */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    position: fixed;
+    top: 0;  /* Set to top */
+    left: 0;  /* Set to left */
+    z-index: 1000;  /* Ensure it appears above other content */
+}
+
+.back-button:hover {
+    background-color: #d32f2f;
+    /* Darker red color on hover */
+}

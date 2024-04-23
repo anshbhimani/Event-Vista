@@ -2,8 +2,12 @@
   margin-top: 20px;
 }
 
-html {
-  background-color: #fff !important; 
+.organizer-dashboard {
+  background-color: #17591865;
+  width: 100%;
+  height: 1000px;
+  scroll-behavior: auto;
+  scrollbar-width: 10px;
 }
 
 .event {
